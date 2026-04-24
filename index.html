@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#3b82f6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VeeMoney">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Vee Money Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:20px}
+.container{max-width:1200px;margin:0 auto}
+h1{font-size:24px;font-weight:600;margin-bottom:4px;color:#f8fafc}
+.subtitle{color:#94a3b8;font-size:14px;margin-bottom:24px}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:24px}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:24px}
+.card{background:#1e293b;border-radius:12px;padding:20px;border:1px solid #334155}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.card-label{font-size:13px;color:#94a3b8;font-weight:500}
+.card-value{font-size:28px;font-weight:700;margin-bottom:4px}
+.card-sub{font-size:12px;color:#64748b}
+.bank-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+.kbank{background:#00a651;color:#fff}
+.ktb{background:#00a5e3;color:#fff}
+.progress-bar{height:8px;background:#334155;border-radius:4px;overflow:hidden;margin-top:12px}
+.progress-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.green{color:#4ade80}.blue{color:#60a5fa}.yellow{color:#fbbf24}.red{color:#f87171}.purple{color:#a78bfa}.teal{color:#2dd4bf}
+.section-title{font-size:16px;font-weight:600;margin-bottom:16px;color:#f8fafc;display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.badge-green{background:#065f46;color:#6ee7b7}
+.badge-blue{background:#1e3a5f;color:#93c5fd}
+.badge-yellow{background:#713f12;color:#fde68a}
+.badge-red{background:#7f1d1d;color:#fca5a5}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;color:#94a3b8;font-weight:500;border-bottom:1px solid #334155;font-size:12px}
+td{padding:10px 12px;border-bottom:1px solid #1e293b}
+.input-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.input-row select,.input-row input{background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:8px 12px;border-radius:8px;font-size:13px}
+.input-row input{width:140px}
+.input-row select{min-width:140px}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600}
+.btn-primary{background:#3b82f6;color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-danger{background:#ef4444;color:#fff;padding:4px 10px;font-size:12px}
+.btn-danger:hover{background:#dc2626}
+.chart-bar{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.chart-bar-label{min-width:80px;font-size:12px;color:#94a3b8;text-align:right}
+.chart-bar-track{flex:1;height:24px;background:#334155;border-radius:4px;overflow:hidden;position:relative}
+.chart-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;color:#fff;min-width:fit-content}
+.rule-card{display:flex;align-items:center;gap:16px;padding:16px;background:#0f172a;border-radius:8px;margin-bottom:8px}
+.rule-pct{font-size:28px;font-weight:700;min-width:60px;text-align:center}
+.rule-info{flex:1}
+.rule-name{font-weight:600;font-size:14px;margin-bottom:2px}
+.rule-desc{font-size:12px;color:#94a3b8}
+.rule-amount{font-size:18px;font-weight:700;min-width:120px;text-align:right}
+.tab-bar{display:flex;gap:4px;margin-bottom:20px;background:#1e293b;padding:4px;border-radius:10px;width:fit-content}
+.tab{padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:#94a3b8;border:none;background:none}
+.tab.active{background:#3b82f6;color:#fff}
+.goal-item{display:flex;align-items:center;gap:12px;padding:12px;background:#0f172a;border-radius:8px;margin-bottom:8px}
+.goal-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.goal-info{flex:1}
+.goal-name{font-weight:600;font-size:14px}
+.goal-detail{font-size:12px;color:#94a3b8}
+.goal-amount{text-align:right}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:100;align-items:center;justify-content:center}
+.modal{background:#1e293b;border-radius:16px;padding:24px;width:90%;max-width:400px;border:1px solid #334155}
+.modal h3{margin-bottom:16px;font-size:18px}
+.modal label{display:block;font-size:13px;color:#94a3b8;margin-bottom:4px;margin-top:12px}
+.modal input,.modal select{width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:10px 12px;border-radius:8px;font-size:14px;margin-bottom:4px}
+.modal-btns{display:flex;gap:8px;margin-top:20px}
+.modal-btns .btn{flex:1}
+.btn-cancel{background:#334155;color:#e2e8f0}
+.summary-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
+.summary-row .label{color:#94a3b8}
+.divider{border-top:1px solid #334155;margin:8px 0}
+.slip-zone{border:2px dashed #334155;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.3s;margin-bottom:16px;position:relative}
+.slip-zone:hover{border-color:#3b82f6;background:rgba(59,130,246,0.05)}
+.slip-zone.dragging{border-color:#3b82f6;background:rgba(59,130,246,0.1)}
+.slip-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.slip-icon{font-size:36px;margin-bottom:8px}
+.slip-text{font-size:14px;color:#94a3b8}
+.slip-text b{color:#60a5fa}
+.slip-preview{max-width:100%;max-height:200px;border-radius:8px;margin-top:12px;display:none}
+.ocr-status{padding:12px;border-radius:8px;margin-bottom:12px;font-size:13px;display:none}
+.ocr-loading{background:#1e3a5f;color:#93c5fd}
+.ocr-success{background:#065f46;color:#6ee7b7}
+.ocr-error{background:#7f1d1d;color:#fca5a5}
+.ocr-result{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;margin-bottom:12px;display:none}
+.ocr-result-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.ocr-result-label{color:#94a3b8}
+.ocr-result-value{font-weight:600;color:#f8fafc}
+.btn-scan{background:#8b5cf6;color:#fff;padding:10px 20px;font-size:14px}
+.btn-scan:hover{background:#7c3aed}
+.camera-btns{display:flex;gap:8px;margin-top:12px;justify-content:center}
+@media(max-width:600px){
+  .input-row{flex-direction:column}
+  .input-row input,.input-row select{width:100%}
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-2{grid-template-columns:1fr}
+  .tab-bar{width:100%;overflow-x:auto}
+  .card-value{font-size:22px}
+  .rule-pct{font-size:22px;min-width:45px}
+  .rule-amount{font-size:15px;min-width:90px}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+<div class="container">
+<h1>Vee Money Dashboard</h1>
+<p class="subtitle">ระบบจัดการเงิน 4 บัญชี | กสิกรไทย + กรุงไทย</p>
+
+<div class="grid-4" id="accountCards"></div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('overview')">ภาพรวม</button>
+  <button class="tab" onclick="switchTab('transactions')">รายรับ-รายจ่าย</button>
+  <button class="tab" onclick="switchTab('goals')">เป้าหมาย</button>
+  <button class="tab" onclick="switchTab('settings')">ตั้งค่า</button>
+</div>
+
+<div id="tab-overview">
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">กฎ 50/30/20 <span class="badge badge-blue">แนะนำ</span></div>
+      <div id="ruleCards"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">สัดส่วนบัญชี</div>
+      <div id="accountBars"></div>
+      <div class="divider"></div>
+      <div id="summaryStats"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">รายการล่าสุด</div>
+    <table>
+      <thead><tr><th>วันที่</th><th>รายการ</th><th>บัญชี</th><th>ประเภท</th><th style="text-align:right">จำนวน</th></tr></thead>
+      <tbody id="recentTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="tab-transactions" style="display:none">
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-title">สแกนสลิป <span class="badge badge-blue">OCR</span></div>
+    <div class="slip-zone" id="slipZone" onclick="document.getElementById('slipInput').click()">
+      <input type="file" id="slipInput" accept="image/*" capture="environment" onchange="handleSlipUpload(event)">
+      <div class="slip-icon">📸</div>
+      <div class="slip-text">แตะเพื่อ<b>ถ่ายรูป</b>หรือ<b>เลือกรูปสลิป</b></div>
+      <div class="slip-text" style="font-size:12px;margin-top:4px">รองรับสลิป กสิกร / กรุงไทย / พร้อมเพย์</div>
+      <img id="slipPreview" class="slip-preview">
+    </div>
+    <div class="ocr-status" id="ocrStatus"></div>
+    <div class="ocr-result" id="ocrResult">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#60a5fa">ผลอ่านสลิป:</div>
+      <div class="ocr-result-row"><span class="ocr-result-label">จำนวนเงิน</span><span class="ocr-result-value" id="ocrAmount">-</span></div>
+      <div class="ocr-result-row"><span class="ocr-result-label">วันที่</span><span class="ocr-result-value" id="ocrDate">-</span></div>
+      <div class="ocr-result-row"><span class="ocr-result-label">ธนาคาร</span><span class="ocr-result-value" id="ocrBank">-</span></div>
+      <div class="ocr-result-row"><span class="ocr-result-label">หมายเหตุ</span><span class="ocr-result-value" id="ocrNote">-</span></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary" style="flex:1" onclick="applyOcrToForm()">ใช้ข้อมูลนี้</button>
+        <button class="btn btn-cancel" style="flex:1" onclick="clearOcr()">ล้าง</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-title">เพิ่มรายการ</div>
+    <div class="input-row">
+      <input type="date" id="txDate">
+      <select id="txAccount">
+        <option value="kbank1">กสิกร - เงินเดือน</option>
+        <option value="kbank2">กสิกร - ใช้จ่าย</option>
+        <option value="ktb1">กรุงไทย - ออม</option>
+        <option value="ktb2">กรุงไทย - ฉุกเฉิน</option>
+      </select>
+      <select id="txType">
+        <option value="income">รายรับ</option>
+        <option value="expense">รายจ่าย</option>
+        <option value="transfer">โอนระหว่างบัญชี</option>
+      </select>
+      <select id="txCategory" style="display:none">
+        <option value="">เลือกบัญชีปลายทาง</option>
+        <option value="kbank1">กสิกร - เงินเดือน</option>
+        <option value="kbank2">กสิกร - ใช้จ่าย</option>
+        <option value="ktb1">กรุงไทย - ออม</option>
+        <option value="ktb2">กรุงไทย - ฉุกเฉิน</option>
+      </select>
+      <select id="txCatNormal">
+        <option value="เงินเดือน">เงินเดือน</option>
+        <option value="โอนรับ">โอนรับจากคนอื่น</option>
+        <option value="อาหาร">อาหาร</option>
+        <option value="เดินทาง">เดินทาง</option>
+        <option value="ของใช้">ของใช้</option>
+        <option value="บันเทิง">บันเทิง</option>
+        <option value="ค่าเช่า/ผ่อน">ค่าเช่า/ผ่อน</option>
+        <option value="สาธารณูปโภค">สาธารณูปโภค</option>
+        <option value="อื่นๆ">อื่นๆ</option>
+      </select>
+    </div>
+    <div class="input-row">
+      <input type="text" id="txDesc" placeholder="รายละเอียด">
+      <input type="number" id="txAmount" placeholder="จำนวนเงิน (฿)">
+      <button class="btn btn-primary" onclick="addTransaction()">+ เพิ่มรายการ</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="section-title" style="margin:0">ประวัติรายการ</div>
+      <select id="filterMonth" onchange="render()" style="background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:6px 10px;border-radius:8px;font-size:13px">
+        <option value="all">ทั้งหมด</option>
+      </select>
+    </div>
+    <table>
+      <thead><tr><th>วันที่</th><th>รายการ</th><th>บัญชี</th><th>ประเภท</th><th>หมวด</th><th style="text-align:right">จำนวน</th><th></th></tr></thead>
+      <tbody id="txTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="tab-goals" style="display:none">
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">เป้าหมายการออม</div>
+      <div id="goalsList"></div>
+      <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="openGoalModal()">+ เพิ่มเป้าหมาย</button>
+    </div>
+    <div class="card">
+      <div class="section-title">แนะนำเป้าหมาย</div>
+      <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('เงินสำรองฉุกเฉิน','6 เดือนค่าใช้จ่าย',90000,'ktb2')">
+        <div class="goal-icon" style="background:#065f46">🛡</div>
+        <div class="goal-info"><div class="goal-name">เงินสำรองฉุกเฉิน</div><div class="goal-detail">6 เดือน x ค่าใช้จ่ายเดือนละ 15,000 = 90,000 ฿</div></div>
+      </div>
+      <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('ท่องเที่ยว','เที่ยวญี่ปุ่น',50000,'ktb1')">
+        <div class="goal-icon" style="background:#1e3a5f">✈</div>
+        <div class="goal-info"><div class="goal-name">ท่องเที่ยว</div><div class="goal-detail">งบเที่ยวต่างประเทศ 50,000 ฿</div></div>
+      </div>
+      <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('อุปกรณ์ IT','อัปเกรดคอม/อุปกรณ์',30000,'ktb1')">
+        <div class="goal-icon" style="background:#713f12">💻</div>
+        <div class="goal-info"><div class="goal-name">อุปกรณ์ IT</div><div class="goal-detail">อัปเกรดคอม/อุปกรณ์ 30,000 ฿</div></div>
+      </div>
+      <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('ลงทุน','เริ่มลงทุนกองทุน/หุ้น',100000,'ktb1')">
+        <div class="goal-icon" style="background:#3b0764">📈</div>
+        <div class="goal-info"><div class="goal-name">ลงทุน</div><div class="goal-detail">เริ่มลงทุนกองทุน/หุ้น 100,000 ฿</div></div>
+      </div>
+      <p style="font-size:12px;color:#64748b;margin-top:12px">คลิกเพื่อเพิ่มเป้าหมาย (ปรับตัวเลขได้ทีหลัง)</p>
+    </div>
+  </div>
+</div>
+
+<div id="tab-settings" style="display:none">
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">ตั้งค่าเงินเดือน</div>
+      <label style="font-size:13px;color:#94a3b8;margin-bottom:4px;display:block">เงินเดือนต่อเดือน (฿)</label>
+      <input type="number" id="salaryInput" style="background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:10px;border-radius:8px;width:100%;font-size:16px;margin-bottom:12px">
+      <button class="btn btn-primary" onclick="saveSalary()">บันทึก</button>
+    </div>
+    <div class="card">
+      <div class="section-title">การจัดสรรอัตโนมัติ (กฎ 50/30/20)</div>
+      <div id="allocationPreview"></div>
+      <p style="font-size:12px;color:#64748b;margin-top:12px">เมื่อได้รับเงินเดือน ระบบแนะนำให้แบ่งเงินตามสัดส่วนนี้</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">จัดการข้อมูล</div>
+    <div class="input-row">
+      <button class="btn btn-primary" onclick="exportData()">📥 Export ข้อมูล (JSON)</button>
+      <button class="btn btn-cancel" onclick="document.getElementById('importFile').click()">📤 Import ข้อมูล</button>
+      <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+      <button class="btn btn-danger" onclick="if(confirm('ลบข้อมูลทั้งหมด?')){localStorage.clear();location.reload()}">🗑 ล้างข้อมูลทั้งหมด</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="goalModal">
+  <div class="modal">
+    <h3>เพิ่มเป้าหมายการออม</h3>
+    <label>ชื่อเป้าหมาย</label>
+    <input type="text" id="goalName" placeholder="เช่น เงินสำรองฉุกเฉิน">
+    <label>รายละเอียด</label>
+    <input type="text" id="goalDesc" placeholder="รายละเอียดเพิ่มเติม">
+    <label>จำนวนเงินเป้าหมาย (฿)</label>
+    <input type="number" id="goalTarget" placeholder="0">
+    <label>บัญชีเป้าหมาย</label>
+    <select id="goalAccount">
+      <option value="ktb1">กรุงไทย - ออม</option>
+      <option value="ktb2">กรุงไทย - ฉุกเฉิน</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeGoalModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveGoal()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ACCOUNTS = {
+  kbank1: { name: 'กสิกร - เงินเดือน', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'รับเงินเดือน + แบ่งเงิน' },
+  kbank2: { name: 'กสิกร - ใช้จ่าย', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'ค่าใช้จ่ายรายวัน' },
+  ktb1:   { name: 'กรุงไทย - ออม', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'ออมระยะยาว + รับโอน' },
+  ktb2:   { name: 'กรุงไทย - ฉุกเฉิน', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'สำรองฉุกเฉิน 3-6 เดือน' }
+};
+
+let state = JSON.parse(localStorage.getItem('vee_money') || 'null') || {
+  salary: 0,
+  balances: { kbank1: 0, kbank2: 0, ktb1: 0, ktb2: 0 },
+  transactions: [],
+  goals: []
+};
+
+function save() { localStorage.setItem('vee_money', JSON.stringify(state)); }
+
+function fmt(n) { return n.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+
+function switchTab(tab) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = '';
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  if (tab === 'settings') renderSettings();
+}
+
+function render() {
+  renderAccounts();
+  renderRules();
+  renderBars();
+  renderRecent();
+  renderTransactions();
+  renderGoals();
+  renderMonthFilter();
+}
+
+function renderAccounts() {
+  const total = Object.values(state.balances).reduce((a, b) => a + b, 0);
+  const colors = { kbank1: '#4ade80', kbank2: '#fbbf24', ktb1: '#60a5fa', ktb2: '#a78bfa' };
+  let html = '';
+  for (const [id, acc] of Object.entries(ACCOUNTS)) {
+    const bal = state.balances[id];
+    const pct = total > 0 ? Math.round(bal / total * 100) : 0;
+    html += `<div class="card">
+      <div class="card-header">
+        <div class="card-label">${acc.name}</div>
+        <div class="bank-icon ${acc.css}">${acc.icon}</div>
+      </div>
+      <div class="card-value" style="color:${colors[id]}">฿${fmt(bal)}</div>
+      <div class="card-sub">${acc.purpose} (${pct}%)</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${colors[id]}"></div></div>
+    </div>`;
+  }
+  document.getElementById('accountCards').innerHTML = html;
+}
+
+function renderRules() {
+  const salary = state.salary || 0;
+  const rules = [
+    { pct: 50, name: 'จำเป็น', desc: 'ค่าเช่า, อาหาร, เดินทาง, สาธารณูปโภค', color: '#fbbf24', account: 'กสิกร - ใช้จ่าย' },
+    { pct: 30, name: 'ต้องการ', desc: 'บันเทิง, ท่องเที่ยว, ของใช้ไม่จำเป็น', color: '#60a5fa', account: 'กสิกร - ใช้จ่าย' },
+    { pct: 20, name: 'ออม/ลงทุน', desc: 'เก็บออม, กองทุน, ฉุกเฉิน', color: '#4ade80', account: 'กรุงไทย - ออม + ฉุกเฉิน' }
+  ];
+  let html = '';
+  for (const r of rules) {
+    const amount = Math.round(salary * r.pct / 100);
+    html += `<div class="rule-card">
+      <div class="rule-pct" style="color:${r.color}">${r.pct}%</div>
+      <div class="rule-info"><div class="rule-name">${r.name}</div><div class="rule-desc">${r.desc}</div><div class="rule-desc" style="margin-top:2px">→ ${r.account}</div></div>
+      <div class="rule-amount" style="color:${r.color}">฿${fmt(amount)}</div>
+    </div>`;
+  }
+  document.getElementById('ruleCards').innerHTML = html;
+}
+
+function renderBars() {
+  const total = Object.values(state.balances).reduce((a, b) => a + b, 0);
+  const colors = { kbank1: '#4ade80', kbank2: '#fbbf24', ktb1: '#60a5fa', ktb2: '#a78bfa' };
+  let html = '';
+  for (const [id, acc] of Object.entries(ACCOUNTS)) {
+    const bal = state.balances[id];
+    const pct = total > 0 ? Math.round(bal / total * 100) : 0;
+    html += `<div class="chart-bar">
+      <div class="chart-bar-label">${acc.name.split(' - ')[1]}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.max(pct, 2)}%;background:${colors[id]}">${pct}%</div></div>
+      <div style="min-width:90px;text-align:right;font-size:13px;font-weight:600">฿${fmt(bal)}</div>
+    </div>`;
+  }
+  document.getElementById('accountBars').innerHTML = html;
+
+  const totalIncome = state.transactions.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0);
+  const totalExpense = state.transactions.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
+  const savings = state.balances.ktb1 + state.balances.ktb2;
+
+  document.getElementById('summaryStats').innerHTML = `
+    <div class="summary-row"><span class="label">ยอมรวมทุกบัญชี</span><span style="font-weight:600;color:#f8fafc">฿${fmt(total)}</span></div>
+    <div class="summary-row"><span class="label">รายรับรวม</span><span class="green">+฿${fmt(totalIncome)}</span></div>
+    <div class="summary-row"><span class="label">รายจ่ายรวม</span><span class="red">-฿${fmt(totalExpense)}</span></div>
+    <div class="summary-row"><span class="label">เงินออม (กรุงไทย)</span><span class="blue">฿${fmt(savings)}</span></div>
+  `;
+}
+
+function renderRecent() {
+  const recent = [...state.transactions].reverse().slice(0, 5);
+  let html = '';
+  for (const tx of recent) {
+    const acc = ACCOUNTS[tx.account];
+    const isIncome = tx.type === 'income';
+    const isTransfer = tx.type === 'transfer';
+    const color = isIncome ? 'green' : isTransfer ? 'blue' : 'red';
+    const sign = isIncome ? '+' : isTransfer ? '↔' : '-';
+    const badge = isIncome ? 'badge-green' : isTransfer ? 'badge-blue' : 'badge-red';
+    const typeLabel = isIncome ? 'รายรับ' : isTransfer ? 'โอน' : 'รายจ่าย';
+    html += `<tr>
+      <td>${tx.date}</td>
+      <td>${tx.desc || tx.category}</td>
+      <td><span class="bank-icon ${acc.css}" style="width:24px;height:24px;font-size:9px;display:inline-flex">${acc.icon}</span> ${acc.name.split(' - ')[1]}</td>
+      <td><span class="badge ${badge}">${typeLabel}</span></td>
+      <td style="text-align:right;font-weight:600" class="${color}">${sign}฿${fmt(tx.amount)}</td>
+    </tr>`;
+  }
+  if (!recent.length) html = '<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px">ยังไม่มีรายการ</td></tr>';
+  document.getElementById('recentTable').innerHTML = html;
+}
+
+function renderTransactions() {
+  const filter = document.getElementById('filterMonth')?.value || 'all';
+  let txs = [...state.transactions].reverse();
+  if (filter !== 'all') txs = txs.filter(t => t.date.substring(0, 7) === filter);
+  let html = '';
+  for (let i = 0; i < txs.length; i++) {
+    const tx = txs[i];
+    const acc = ACCOUNTS[tx.account];
+    const isIncome = tx.type === 'income';
+    const isTransfer = tx.type === 'transfer';
+    const color = isIncome ? 'green' : isTransfer ? 'blue' : 'red';
+    const sign = isIncome ? '+' : isTransfer ? '↔' : '-';
+    const badge = isIncome ? 'badge-green' : isTransfer ? 'badge-blue' : 'badge-red';
+    const typeLabel = isIncome ? 'รายรับ' : isTransfer ? 'โอน' : 'รายจ่าย';
+    const realIdx = state.transactions.indexOf(tx);
+    html += `<tr>
+      <td>${tx.date}</td>
+      <td>${tx.desc || '-'}</td>
+      <td>${acc.name}</td>
+      <td><span class="badge ${badge}">${typeLabel}</span></td>
+      <td>${tx.category}</td>
+      <td style="text-align:right;font-weight:600" class="${color}">${sign}฿${fmt(tx.amount)}</td>
+      <td><button class="btn btn-danger" onclick="deleteTx(${realIdx})">ลบ</button></td>
+    </tr>`;
+  }
+  if (!txs.length) html = '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px">ไม่มีรายการ</td></tr>';
+  document.getElementById('txTable').innerHTML = html;
+}
+
+function renderMonthFilter() {
+  const months = [...new Set(state.transactions.map(t => t.date.substring(0, 7)))].sort().reverse();
+  let html = '<option value="all">ทั้งหมด</option>';
+  for (const m of months) html += `<option value="${m}">${m}</option>`;
+  const sel = document.getElementById('filterMonth');
+  if (sel) { const cur = sel.value; sel.innerHTML = html; sel.value = cur || 'all'; }
+}
+
+function renderGoals() {
+  const list = document.getElementById('goalsList');
+  if (!list) return;
+  let html = '';
+  for (let i = 0; i < state.goals.length; i++) {
+    const g = state.goals[i];
+    const current = state.balances[g.account] || 0;
+    const pct = g.target > 0 ? Math.min(Math.round(current / g.target * 100), 100) : 0;
+    const color = pct >= 100 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#60a5fa';
+    html += `<div class="goal-item">
+      <div style="min-width:50px;text-align:center"><div style="font-size:24px;font-weight:700;color:${color}">${pct}%</div></div>
+      <div class="goal-info">
+        <div class="goal-name">${g.name}</div>
+        <div class="goal-detail">${g.desc} | ${ACCOUNTS[g.account]?.name || g.account}</div>
+        <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
+      </div>
+      <div class="goal-amount">
+        <div style="font-size:14px;font-weight:600;color:${color}">฿${fmt(current)}</div>
+        <div style="font-size:11px;color:#64748b">/ ฿${fmt(g.target)}</div>
+        <button class="btn btn-danger" style="margin-top:4px" onclick="deleteGoal(${i})">ลบ</button>
+      </div>
+    </div>`;
+  }
+  if (!state.goals.length) html = '<p style="text-align:center;color:#64748b;padding:20px">ยังไม่มีเป้าหมาย — เพิ่มได้ด้านล่างหรือเลือกจากคำแนะนำด้านขวา</p>';
+  list.innerHTML = html;
+}
+
+function renderSettings() {
+  document.getElementById('salaryInput').value = state.salary || '';
+  const salary = state.salary || 0;
+  const alloc = [
+    { name: 'กสิกร - ใช้จ่าย (50% จำเป็น)', amount: Math.round(salary * 0.5), color: '#fbbf24' },
+    { name: 'กสิกร - ใช้จ่าย (30% ต้องการ)', amount: Math.round(salary * 0.3), color: '#60a5fa' },
+    { name: 'กรุงไทย - ออม (15%)', amount: Math.round(salary * 0.15), color: '#4ade80' },
+    { name: 'กรุงไทย - ฉุกเฉิน (5%)', amount: Math.round(salary * 0.05), color: '#a78bfa' }
+  ];
+  let html = '';
+  for (const a of alloc) {
+    html += `<div class="summary-row"><span class="label">${a.name}</span><span style="color:${a.color};font-weight:600">฿${fmt(a.amount)}</span></div>`;
+  }
+  document.getElementById('allocationPreview').innerHTML = html;
+}
+
+function addTransaction() {
+  const date = document.getElementById('txDate').value;
+  const account = document.getElementById('txAccount').value;
+  const type = document.getElementById('txType').value;
+  const amount = parseFloat(document.getElementById('txAmount').value) || 0;
+  const desc = document.getElementById('txDesc').value;
+  const catEl = type === 'transfer' ? document.getElementById('txCategory') : document.getElementById('txCatNormal');
+  const category = catEl.value;
+
+  if (!date || !amount) { alert('กรุณากรอกวันที่และจำนวนเงิน'); return; }
+
+  const tx = { date, account, type, amount, desc, category, id: Date.now() };
+  state.transactions.push(tx);
+
+  if (type === 'income') {
+    state.balances[account] += amount;
+  } else if (type === 'expense') {
+    state.balances[account] -= amount;
+  } else if (type === 'transfer' && category) {
+    state.balances[account] -= amount;
+    state.balances[category] += amount;
+  }
+
+  save(); render();
+  document.getElementById('txAmount').value = '';
+  document.getElementById('txDesc').value = '';
+}
+
+function deleteTx(idx) {
+  if (!confirm('ลบรายการนี้?')) return;
+  const tx = state.transactions[idx];
+  if (tx.type === 'income') state.balances[tx.account] -= tx.amount;
+  else if (tx.type === 'expense') state.balances[tx.account] += tx.amount;
+  else if (tx.type === 'transfer' && tx.category) {
+    state.balances[tx.account] += tx.amount;
+    state.balances[tx.category] -= tx.amount;
+  }
+  state.transactions.splice(idx, 1);
+  save(); render();
+}
+
+function saveSalary() {
+  state.salary = parseFloat(document.getElementById('salaryInput').value) || 0;
+  save(); render(); renderSettings();
+  alert('บันทึกเงินเดือนเรียบร้อย: ฿' + fmt(state.salary));
+}
+
+function openGoalModal() { document.getElementById('goalModal').style.display = 'flex'; }
+function closeGoalModal() { document.getElementById('goalModal').style.display = 'none'; }
+
+function saveGoal() {
+  const name = document.getElementById('goalName').value;
+  const desc = document.getElementById('goalDesc').value;
+  const target = parseFloat(document.getElementById('goalTarget').value) || 0;
+  const account = document.getElementById('goalAccount').value;
+  if (!name || !target) { alert('กรุณากรอกชื่อและจำนวนเงินเป้าหมาย'); return; }
+  state.goals.push({ name, desc, target, account });
+  save(); render(); closeGoalModal();
+  document.getElementById('goalName').value = '';
+  document.getElementById('goalDesc').value = '';
+  document.getElementById('goalTarget').value = '';
+}
+
+function deleteGoal(idx) {
+  if (!confirm('ลบเป้าหมายนี้?')) return;
+  state.goals.splice(idx, 1);
+  save(); render();
+}
+
+function addSuggestedGoal(name, desc, target, account) {
+  if (state.goals.find(g => g.name === name)) { alert('มีเป้าหมายนี้แล้ว'); return; }
+  state.goals.push({ name, desc, target, account });
+  save(); render();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'vee-money-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      state = JSON.parse(e.target.result);
+      save(); render();
+      alert('Import สำเร็จ!');
+    } catch { alert('ไฟล์ไม่ถูกต้อง'); }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('txType').addEventListener('change', function() {
+  const isTransfer = this.value === 'transfer';
+  document.getElementById('txCategory').style.display = isTransfer ? '' : 'none';
+  document.getElementById('txCatNormal').style.display = isTransfer ? 'none' : '';
+});
+
+document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+
+// ============ OCR Slip Reading ============
+let ocrData = { amount: null, date: null, bank: null, note: '' };
+
+// Drag & drop support
+const slipZone = document.getElementById('slipZone');
+slipZone.addEventListener('dragover', e => { e.preventDefault(); slipZone.classList.add('dragging'); });
+slipZone.addEventListener('dragleave', () => slipZone.classList.remove('dragging'));
+slipZone.addEventListener('drop', e => {
+  e.preventDefault();
+  slipZone.classList.remove('dragging');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) processSlipFile(file);
+});
+
+function handleSlipUpload(event) {
+  const file = event.target.files[0];
+  if (file) processSlipFile(file);
+}
+
+function processSlipFile(file) {
+  // Show preview
+  const preview = document.getElementById('slipPreview');
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    scanSlip(file);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showOcrStatus(msg, type) {
+  const el = document.getElementById('ocrStatus');
+  el.textContent = msg;
+  el.className = 'ocr-status ocr-' + type;
+  el.style.display = 'block';
+}
+
+async function scanSlip(file) {
+  showOcrStatus('กำลังอ่านสลิป... โปรดรอสักครู่ (อาจใช้เวลา 5-15 วินาที)', 'loading');
+  document.getElementById('ocrResult').style.display = 'none';
+
+  try {
+    const result = await Tesseract.recognize(file, 'tha+eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const pct = Math.round((m.progress || 0) * 100);
+          showOcrStatus(`กำลังอ่านสลิป... ${pct}%`, 'loading');
+        }
+      }
+    });
+
+    const text = result.data.text;
+    console.log('OCR raw text:', text);
+    parseSlipText(text);
+
+  } catch (err) {
+    console.error('OCR Error:', err);
+    showOcrStatus('ไม่สามารถอ่านสลิปได้ กรุณาลองถ่ายรูปใหม่ให้ชัดขึ้น', 'error');
+  }
+}
+
+function parseSlipText(text) {
+  ocrData = { amount: null, date: null, bank: null, note: '' };
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // --- Extract amount ---
+  // Patterns: "1,000.00 บาท", "฿1,000", "THB 1,000.00", "จำนวนเงิน 1,000"
+  const amountPatterns = [
+    /(?:จำนวน(?:เงิน)?|amount|ยอด(?:เงิน)?|ยอดโอน)\s*[:=]?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
+    /([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)\s*(?:บาท|baht|THB)/i,
+    /(?:฿|THB)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)/i,
+    /([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{2})?)/  // fallback: any comma-formatted number
+  ];
+
+  for (const pat of amountPatterns) {
+    const m = text.match(pat);
+    if (m) {
+      const val = parseFloat(m[1].replace(/,/g, ''));
+      if (val > 0 && val < 10000000) { // reasonable range
+        ocrData.amount = val;
+        break;
+      }
+    }
+  }
+
+  // --- Extract date ---
+  // Thai slip formats: "24 เม.ย. 2569", "24/04/2569", "24 Apr 2026", "2026-04-24"
+  const thaiMonths = { 'ม.ค.': '01', 'ก.พ.': '02', 'มี.ค.': '03', 'เม.ย.': '04', 'พ.ค.': '05', 'มิ.ย.': '06',
+    'ก.ค.': '07', 'ส.ค.': '08', 'ก.ย.': '09', 'ต.ค.': '10', 'พ.ย.': '11', 'ธ.ค.': '12',
+    'มกราคม': '01', 'กุมภาพันธ์': '02', 'มีนาคม': '03', 'เมษายน': '04', 'พฤษภาคม': '05', 'มิถุนายน': '06',
+    'กรกฎาคม': '07', 'สิงหาคม': '08', 'กันยายน': '09', 'ตุลาคม': '10', 'พฤศจิกายน': '11', 'ธันวาคม': '12' };
+
+  // Try dd/mm/yyyy or dd-mm-yyyy
+  const dateSlash = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (dateSlash) {
+    let [, d, m, y] = dateSlash;
+    if (parseInt(y) > 2500) y = String(parseInt(y) - 543); // convert พ.ศ. to ค.ศ.
+    ocrData.date = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+
+  // Try Thai month format: "24 เม.ย. 2569"
+  if (!ocrData.date) {
+    for (const [thm, num] of Object.entries(thaiMonths)) {
+      const pat = new RegExp(`(\\d{1,2})\\s*${thm.replace('.', '\\.')}\\s*(\\d{4})`);
+      const m = text.match(pat);
+      if (m) {
+        let y = parseInt(m[2]);
+        if (y > 2500) y -= 543;
+        ocrData.date = `${y}-${num}-${m[1].padStart(2,'0')}`;
+        break;
+      }
+    }
+  }
+
+  // Try ISO format yyyy-mm-dd
+  if (!ocrData.date) {
+    const iso = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) {
+      let y = parseInt(iso[1]);
+      if (y > 2500) y -= 543;
+      ocrData.date = `${y}-${iso[2]}-${iso[3]}`;
+    }
+  }
+
+  // --- Detect bank ---
+  const bankPatterns = [
+    { pattern: /กสิกร|kasikorn|kbank|k\s*bank|k-?plus/i, bank: 'kbank', label: 'กสิกรไทย' },
+    { pattern: /กรุงไทย|krungthai|ktb|เป๋าตัง|paotang/i, bank: 'ktb', label: 'กรุงไทย' },
+    { pattern: /กรุงเทพ|bangkok bank|bbl/i, bank: 'other', label: 'กรุงเทพ' },
+    { pattern: /ไทยพาณิชย์|scb|siam commercial/i, bank: 'other', label: 'ไทยพาณิชย์' },
+    { pattern: /พร้อมเพย์|promptpay|prompt\s*pay/i, bank: 'promptpay', label: 'พร้อมเพย์' }
+  ];
+
+  for (const bp of bankPatterns) {
+    if (bp.pattern.test(text)) {
+      ocrData.bank = bp;
+      break;
+    }
+  }
+
+  // --- Extract note/memo ---
+  const notePatterns = [
+    /(?:หมายเหตุ|บันทึก|memo|note|ref)\s*[:=]?\s*(.+)/i,
+    /(?:ผู้รับ|to|โอนให้)\s*[:=]?\s*(.+)/i
+  ];
+  for (const pat of notePatterns) {
+    const m = text.match(pat);
+    if (m) { ocrData.note = m[1].trim().substring(0, 50); break; }
+  }
+
+  // --- Display results ---
+  showOcrStatus('อ่านสลิปสำเร็จ! ตรวจสอบข้อมูลด้านล่าง', 'success');
+  document.getElementById('ocrResult').style.display = 'block';
+  document.getElementById('ocrAmount').textContent = ocrData.amount ? `฿${fmt(ocrData.amount)}` : 'ไม่พบ (กรอกเอง)';
+  document.getElementById('ocrDate').textContent = ocrData.date || 'ไม่พบ (ใช้วันนี้)';
+  document.getElementById('ocrBank').textContent = ocrData.bank ? ocrData.bank.label : 'ไม่พบ (เลือกเอง)';
+  document.getElementById('ocrNote').textContent = ocrData.note || '-';
+
+  // Highlight found vs not found
+  document.getElementById('ocrAmount').style.color = ocrData.amount ? '#4ade80' : '#fbbf24';
+  document.getElementById('ocrDate').style.color = ocrData.date ? '#4ade80' : '#fbbf24';
+  document.getElementById('ocrBank').style.color = ocrData.bank ? '#4ade80' : '#fbbf24';
+}
+
+function applyOcrToForm() {
+  if (ocrData.amount) document.getElementById('txAmount').value = ocrData.amount;
+  if (ocrData.date) document.getElementById('txDate').value = ocrData.date;
+  if (ocrData.note) document.getElementById('txDesc').value = ocrData.note;
+
+  // Map bank to account
+  if (ocrData.bank) {
+    const bankMap = { kbank: 'kbank2', ktb: 'ktb1', promptpay: 'kbank1' };
+    const mapped = bankMap[ocrData.bank.bank];
+    if (mapped) document.getElementById('txAccount').value = mapped;
+  }
+
+  // Scroll to form
+  document.querySelector('#tab-transactions .card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showOcrStatus('ข้อมูลถูกเติมในฟอร์มเรียบร้อย — ตรวจสอบแล้วกด "เพิ่มรายการ"', 'success');
+}
+
+function clearOcr() {
+  ocrData = { amount: null, date: null, bank: null, note: '' };
+  document.getElementById('slipPreview').style.display = 'none';
+  document.getElementById('ocrStatus').style.display = 'none';
+  document.getElementById('ocrResult').style.display = 'none';
+  document.getElementById('slipInput').value = '';
+}
+
+render();
+
+// ============ PWA Service Worker Registration ============
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
