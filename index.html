@@ -999,18 +999,50 @@ async function scanSlip(file) {
 
 function parseSlipText(text) {
   ocrData = { amount: null, date: null, bank: null, note: '' };
-  const amountPatterns = [
-    /(?:จำนวน(?:เงิน)?|amount|ยอด(?:เงิน)?|ยอดโอน)\s*[:=]?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
-    /([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)\s*(?:บาท|baht|THB)/i,
-    /(?:฿|THB)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)/i,
-    /([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{2})?)/
-  ];
-  for (const pat of amountPatterns) {
-    const m = text.match(pat);
-    if (m) {
-      const val = parseFloat(m[1].replace(/,/g, ''));
-      if (val > 0 && val < 10000000) { ocrData.amount = val; break; }
+
+  // Normalize common OCR digit mistakes (only safe Latin chars, won't touch Thai)
+  // O/Q → 0, I/l/| → 1 (these letters aren't used in Thai script)
+  const normText = text.replace(/[OQ]/g, '0').replace(/[Il|]/g, '1');
+
+  // Collect ALL candidate amounts with confidence scores, then pick the best
+  const candidates = [];
+  const cleanNum = s => parseFloat(s.replace(/[,\s]/g, ''));
+
+  // Pattern A (highest confidence): explicit label "จำนวน:" / "ยอด:" / "amount:"
+  for (const m of normText.matchAll(/(?:จำนวน(?:เงิน)?|ยอด(?:เงิน)?|ยอดโอน|ยอดชำระ|ยอดที่ชำระ|amount|total)[\s:=]*\n?\s*([0-9]{1,3}(?:[,\s][0-9]{3})*(?:\.\s?[0-9]{1,2})?|[0-9]+\.[0-9]{1,2})/gi)) {
+    const val = cleanNum(m[1]);
+    if (val > 0 && val < 10000000) candidates.push({ val, score: 100 });
+  }
+
+  // Pattern B: number followed by บาท/baht/THB
+  // Penalize tiny amounts (< 50) — likely fees/charges, not the main transfer
+  for (const m of normText.matchAll(/([0-9]{1,3}(?:[,\s][0-9]{3})*(?:\.\s?[0-9]{1,2})?|[0-9]+\.[0-9]{1,2})\s*(?:บาท|baht|THB|บก|บท|าท)/gi)) {
+    const val = cleanNum(m[1]);
+    if (val > 0 && val < 10000000) {
+      const score = val < 10 ? 20 : (val < 50 ? 50 : 80);
+      candidates.push({ val, score });
     }
+  }
+
+  // Pattern C: ฿X.XX
+  for (const m of normText.matchAll(/(?:฿|THB)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)/gi)) {
+    const val = cleanNum(m[1]);
+    if (val > 0 && val < 10000000) candidates.push({ val, score: 70 });
+  }
+
+  // Pattern D (fallback): any standalone X.XX number (not part of a longer number)
+  for (const m of normText.matchAll(/(?<![0-9.])([0-9]{1,3}(?:,[0-9]{3})*\.[0-9]{2})(?![0-9])/g)) {
+    const val = cleanNum(m[1]);
+    if (val > 0 && val < 10000000) {
+      const score = val < 10 ? 10 : 30;
+      candidates.push({ val, score });
+    }
+  }
+
+  // Pick best: highest score wins, ties broken by largest amount (transfer > fees)
+  if (candidates.length > 0) {
+    candidates.sort((a, b) => b.score - a.score || b.val - a.val);
+    ocrData.amount = candidates[0].val;
   }
 
   const thaiMonths = { 'ม.ค.': '01', 'ก.พ.': '02', 'มี.ค.': '03', 'เม.ย.': '04', 'พ.ค.': '05', 'มิ.ย.': '06',
