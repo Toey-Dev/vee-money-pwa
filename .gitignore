@@ -1,0 +1,25 @@
+# Backup data files - contains personal financial info
+vee-money-backup-*.json
+*.backup.json
+backup/
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env (just in case)
+.env
+.env.local
+.env.*.local
