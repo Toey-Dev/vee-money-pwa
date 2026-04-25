@@ -234,9 +234,8 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 .divider{border-top:1px solid var(--border);margin:10px 0}
 
 /* Slip / OCR */
-.slip-zone{border:2px dashed var(--border-2);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;position:relative;background:rgba(255,255,255,0.02)}
-.slip-zone:hover,.slip-zone.dragging{border-color:var(--accent);background:rgba(99,102,241,0.08)}
-.slip-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.slip-zone{border:2px dashed var(--border-2);border-radius:14px;padding:24px 20px;text-align:center;transition:all 0.2s;margin-bottom:14px;position:relative;background:rgba(255,255,255,0.02)}
+.slip-zone.dragging{border-color:var(--accent);background:rgba(99,102,241,0.08)}
 .slip-icon{font-size:36px;margin-bottom:8px}
 .slip-text{font-size:13px;color:var(--text-2)}
 .slip-text b{color:var(--blue);font-weight:600}
@@ -347,11 +346,16 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 <div id="tab-transactions" style="display:none">
   <div class="card">
     <div class="section-title">สแกนสลิป <span class="badge badge-blue">OCR</span></div>
-    <div class="slip-zone" id="slipZone" onclick="document.getElementById('slipInput').click()">
-      <input type="file" id="slipInput" accept="image/*" capture="environment" onchange="handleSlipUpload(event)">
+    <div class="slip-zone" id="slipZone">
       <div class="slip-icon">📸</div>
-      <div class="slip-text">แตะเพื่อ<b>ถ่ายรูป</b>หรือ<b>เลือกรูปสลิป</b></div>
-      <div class="slip-text" style="font-size:11px;margin-top:4px;color:var(--text-3)">รองรับสลิป กสิกร / กรุงไทย / พร้อมเพย์</div>
+      <div class="slip-text" style="margin-bottom:14px">เลือกวิธีอัปโหลดสลิป</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <button type="button" class="btn btn-primary" style="flex:1;min-width:140px" onclick="event.stopPropagation();document.getElementById('slipCamera').click()">📷 ถ่ายรูปสลิป</button>
+        <button type="button" class="btn btn-cancel" style="flex:1;min-width:140px" onclick="event.stopPropagation();document.getElementById('slipGallery').click()">🖼️ เลือกจากคลังรูป</button>
+      </div>
+      <input type="file" id="slipCamera" accept="image/*" capture="environment" onchange="handleSlipUpload(event)" style="display:none">
+      <input type="file" id="slipGallery" accept="image/*" onchange="handleSlipUpload(event)" style="display:none">
+      <div class="slip-text" style="font-size:11px;margin-top:12px;color:var(--text-3)">รองรับสลิป กสิกร / กรุงไทย / พร้อมเพย์ · ลากไฟล์มาวางก็ได้</div>
       <img id="slipPreview" class="slip-preview">
     </div>
     <div class="ocr-status" id="ocrStatus"></div>
@@ -978,7 +982,8 @@ function clearOcr() {
   document.getElementById('slipPreview').style.display = 'none';
   document.getElementById('ocrStatus').style.display = 'none';
   document.getElementById('ocrResult').style.display = 'none';
-  document.getElementById('slipInput').value = '';
+  document.getElementById('slipCamera').value = '';
+  document.getElementById('slipGallery').value = '';
 }
 
 render();
