@@ -16,16 +16,6 @@
 ### ขั้นตอนที่ 2: Push ไฟล์ขึ้น GitHub
 เปิด Terminal/PowerShell ที่โฟลเดอร์ `vee-money-pwa` แล้วรัน:
 
-```powershell
-cd "D:\Claude Cowork\vee-money-pwa"
-git init
-git add .
-git commit -m "Initial: Vee Money Dashboard PWA"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/vee-money.git
-git push -u origin main
-```
-
 > เปลี่ยน `YOUR_USERNAME` เป็น username GitHub ของคุณ
 
 ### ขั้นตอนที่ 3: เปิด GitHub Pages
