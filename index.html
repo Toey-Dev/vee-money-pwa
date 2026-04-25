@@ -1018,30 +1018,42 @@ function parseSlipText(text) {
     'มกราคม': '01', 'กุมภาพันธ์': '02', 'มีนาคม': '03', 'เมษายน': '04', 'พฤษภาคม': '05', 'มิถุนายน': '06',
     'กรกฎาคม': '07', 'สิงหาคม': '08', 'กันยายน': '09', 'ตุลาคม': '10', 'พฤศจิกายน': '11', 'ธันวาคม': '12' };
 
-  const dateSlash = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  // Normalize year: 2-digit (e.g. "69") → BE 2569 → AD 2026
+  function normalizeYear(y) {
+    y = parseInt(y);
+    if (y < 100) y = 2500 + y;     // 2-digit → assume BE last 2 digits
+    if (y > 2500) y -= 543;        // BE → AD
+    return y;
+  }
+
+  // Try dd/mm/yy or dd/mm/yyyy or dd-mm-yyyy
+  const dateSlash = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
   if (dateSlash) {
     let [, d, m, y] = dateSlash;
-    if (parseInt(y) > 2500) y = String(parseInt(y) - 543);
-    ocrData.date = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+    ocrData.date = `${normalizeYear(y)}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
   }
+
+  // Try Thai month format (e.g. "25 เม.ย. 69" or "25 เมย 2569")
+  // Match longer patterns first (full names before abbreviations)
+  // Make periods optional + flexible spacing — OCR often drops/misreads punctuation
   if (!ocrData.date) {
-    for (const [thm, num] of Object.entries(thaiMonths)) {
-      const pat = new RegExp(`(\\d{1,2})\\s*${thm.replace('.', '\\.')}\\s*(\\d{4})`);
+    const sortedMonths = Object.entries(thaiMonths).sort((a, b) => b[0].length - a[0].length);
+    for (const [thm, num] of sortedMonths) {
+      const flex = thm.split('').map(c => c === '.' ? '\\.?\\s*' : c).join('');
+      const pat = new RegExp(`(\\d{1,2})\\s*${flex}\\s*(\\d{2,4})`);
       const m = text.match(pat);
       if (m) {
-        let y = parseInt(m[2]);
-        if (y > 2500) y -= 543;
-        ocrData.date = `${y}-${num}-${m[1].padStart(2,'0')}`;
+        ocrData.date = `${normalizeYear(m[2])}-${num}-${m[1].padStart(2,'0')}`;
         break;
       }
     }
   }
+
+  // Try ISO format yyyy-mm-dd
   if (!ocrData.date) {
     const iso = text.match(/(\d{4})-(\d{2})-(\d{2})/);
     if (iso) {
-      let y = parseInt(iso[1]);
-      if (y > 2500) y -= 543;
-      ocrData.date = `${y}-${iso[2]}-${iso[3]}`;
+      ocrData.date = `${normalizeYear(iso[1])}-${iso[2]}-${iso[3]}`;
     }
   }
 
