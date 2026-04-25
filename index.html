@@ -245,9 +245,13 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 .ocr-success{background:rgba(52,211,153,0.12);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25)}
 .ocr-error{background:rgba(248,113,113,0.12);color:#fca5a5;border:1px solid rgba(248,113,113,0.25)}
 .ocr-result{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;display:none}
-.ocr-result-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
-.ocr-result-label{color:var(--text-2)}
+.ocr-result-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;gap:10px}
+.ocr-result-label{color:var(--text-2);flex-shrink:0}
 .ocr-result-value{font-weight:600;color:var(--text);font-family:'Inter','Sarabun',sans-serif}
+.ocr-input{background:rgba(255,255,255,0.05);border:1px solid var(--border-2);color:var(--text);padding:7px 10px;border-radius:8px;font-size:13px;font-weight:600;text-align:right;font-family:'Inter','Sarabun',sans-serif;min-width:130px;max-width:180px;transition:border-color 0.2s,background 0.2s}
+.ocr-input:focus{outline:none;border-color:var(--blue);background:var(--bg-2)}
+.ocr-input.text-left{text-align:left}
+.ocr-hint{font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4}
 
 /* ============ MOBILE RESPONSIVE ============ */
 @media(max-width:640px){
@@ -360,11 +364,24 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
     </div>
     <div class="ocr-status" id="ocrStatus"></div>
     <div class="ocr-result" id="ocrResult">
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--blue)">ผลอ่านสลิป</div>
-      <div class="ocr-result-row"><span class="ocr-result-label">จำนวนเงิน</span><span class="ocr-result-value" id="ocrAmount">-</span></div>
-      <div class="ocr-result-row"><span class="ocr-result-label">วันที่</span><span class="ocr-result-value" id="ocrDate">-</span></div>
-      <div class="ocr-result-row"><span class="ocr-result-label">ธนาคาร</span><span class="ocr-result-value" id="ocrBank">-</span></div>
-      <div class="ocr-result-row"><span class="ocr-result-label">หมายเหตุ</span><span class="ocr-result-value" id="ocrNote">-</span></div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px;color:var(--blue)">ผลอ่านสลิป</div>
+      <div class="ocr-hint" style="margin-bottom:10px">✏️ ตรวจสอบและแก้ไขได้ก่อนกด "ใช้ข้อมูลนี้"</div>
+      <div class="ocr-result-row">
+        <span class="ocr-result-label">จำนวนเงิน (฿)</span>
+        <input class="ocr-input" id="ocrAmount" type="number" step="0.01" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div class="ocr-result-row">
+        <span class="ocr-result-label">วันที่</span>
+        <input class="ocr-input" id="ocrDate" type="date">
+      </div>
+      <div class="ocr-result-row">
+        <span class="ocr-result-label">ธนาคาร</span>
+        <span class="ocr-result-value" id="ocrBank">-</span>
+      </div>
+      <div class="ocr-result-row">
+        <span class="ocr-result-label">หมายเหตุ</span>
+        <input class="ocr-input text-left" id="ocrNote" type="text" placeholder="(ไม่บังคับ)">
+      </div>
       <div style="display:flex;gap:8px;margin-top:14px">
         <button class="btn btn-primary" style="flex:1" onclick="applyOcrToForm()">ใช้ข้อมูลนี้</button>
         <button class="btn btn-cancel" style="flex:1" onclick="clearOcr()">ล้าง</button>
@@ -1008,15 +1025,17 @@ function parseSlipText(text) {
   const candidates = [];
   const cleanNum = s => parseFloat(s.replace(/[,\s]/g, ''));
 
-  // Pattern A (highest confidence): explicit label "จำนวน:" / "ยอด:" / "amount:"
-  for (const m of normText.matchAll(/(?:จำนวน(?:เงิน)?|ยอด(?:เงิน)?|ยอดโอน|ยอดชำระ|ยอดที่ชำระ|amount|total)[\s:=]*\n?\s*([0-9]{1,3}(?:[,\s][0-9]{3})*(?:\.\s?[0-9]{1,2})?|[0-9]+\.[0-9]{1,2})/gi)) {
+  // Pattern A (highest confidence): explicit label "จำนวน:" / "ยอด:"
+  // Allow OCR variants of จำนวน — common misreads
+  for (const m of normText.matchAll(/(?:จำนวน(?:เงิน)?|จานวน|ยอด(?:เงิน)?|ยอดโอน|ยอดชำระ|ยอดที่ชำระ|amount|total)[\s:=]*\n?\s*(?<![0-9])([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+\.[0-9]{1,2})(?![0-9])/gi)) {
     const val = cleanNum(m[1]);
     if (val > 0 && val < 10000000) candidates.push({ val, score: 100 });
   }
 
   // Pattern B: number followed by บาท/baht/THB
+  // Use negative lookbehind to prevent leaking digits from adjacent text (e.g. transaction IDs)
   // Penalize tiny amounts (< 50) — likely fees/charges, not the main transfer
-  for (const m of normText.matchAll(/([0-9]{1,3}(?:[,\s][0-9]{3})*(?:\.\s?[0-9]{1,2})?|[0-9]+\.[0-9]{1,2})\s*(?:บาท|baht|THB|บก|บท|าท)/gi)) {
+  for (const m of normText.matchAll(/(?<![0-9])([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+\.[0-9]{1,2})\s*(?:บาท|baht|THB|บก|บท|าท)/gi)) {
     const val = cleanNum(m[1]);
     if (val > 0 && val < 10000000) {
       const score = val < 10 ? 20 : (val < 50 ? 50 : 80);
@@ -1025,12 +1044,12 @@ function parseSlipText(text) {
   }
 
   // Pattern C: ฿X.XX
-  for (const m of normText.matchAll(/(?:฿|THB)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)/gi)) {
+  for (const m of normText.matchAll(/(?:฿|THB)\s*(?<![0-9])([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)/gi)) {
     const val = cleanNum(m[1]);
     if (val > 0 && val < 10000000) candidates.push({ val, score: 70 });
   }
 
-  // Pattern D (fallback): any standalone X.XX number (not part of a longer number)
+  // Pattern D (fallback): any standalone X.XX number
   for (const m of normText.matchAll(/(?<![0-9.])([0-9]{1,3}(?:,[0-9]{3})*\.[0-9]{2})(?![0-9])/g)) {
     const val = cleanNum(m[1]);
     if (val > 0 && val < 10000000) {
@@ -1109,26 +1128,58 @@ function parseSlipText(text) {
     if (m) { ocrData.note = m[1].trim().substring(0, 50); break; }
   }
 
-  showOcrStatus('อ่านสลิปสำเร็จ! ตรวจสอบข้อมูลด้านล่าง', 'success');
+  // Show result + populate editable fields
   document.getElementById('ocrResult').style.display = 'block';
-  document.getElementById('ocrAmount').textContent = ocrData.amount ? `฿ ${fmt(ocrData.amount)}` : 'ไม่พบ (กรอกเอง)';
-  document.getElementById('ocrDate').textContent = ocrData.date || 'ไม่พบ (ใช้วันนี้)';
-  document.getElementById('ocrBank').textContent = ocrData.bank ? ocrData.bank.label : 'ไม่พบ (เลือกเอง)';
-  document.getElementById('ocrNote').textContent = ocrData.note || '-';
-  document.getElementById('ocrAmount').style.color = ocrData.amount ? 'var(--green)' : 'var(--yellow)';
-  document.getElementById('ocrDate').style.color = ocrData.date ? 'var(--green)' : 'var(--yellow)';
-  document.getElementById('ocrBank').style.color = ocrData.bank ? 'var(--green)' : 'var(--yellow)';
+  const amountInput = document.getElementById('ocrAmount');
+  const dateInput = document.getElementById('ocrDate');
+  const bankSpan = document.getElementById('ocrBank');
+  const noteInput = document.getElementById('ocrNote');
+
+  amountInput.value = ocrData.amount || '';
+  amountInput.style.borderColor = ocrData.amount ? 'rgba(52,211,153,0.4)' : 'rgba(251,191,36,0.4)';
+
+  dateInput.value = ocrData.date || new Date().toISOString().split('T')[0];
+  dateInput.style.borderColor = ocrData.date ? 'rgba(52,211,153,0.4)' : 'rgba(251,191,36,0.4)';
+
+  bankSpan.textContent = ocrData.bank ? ocrData.bank.label : 'ไม่พบ (เลือกบัญชีเอง)';
+  bankSpan.style.color = ocrData.bank ? 'var(--green)' : 'var(--yellow)';
+
+  noteInput.value = ocrData.note || '';
+
+  // Status message — count what was found vs missing
+  const found = [ocrData.amount, ocrData.date, ocrData.bank].filter(Boolean).length;
+  if (found === 3) {
+    showOcrStatus('อ่านสลิปสำเร็จ! ตรวจสอบและแก้ไขด้านล่างได้', 'success');
+  } else if (found > 0) {
+    showOcrStatus(`อ่านได้ ${found}/3 — แก้ไขช่องที่ขาดได้ในฟอร์มด้านล่าง`, 'success');
+  } else {
+    showOcrStatus('อ่านสลิปไม่ออกชัด — กรอกข้อมูลเองในฟอร์มด้านล่างได้', 'error');
+  }
 }
 
 function applyOcrToForm() {
-  if (ocrData.amount) document.getElementById('txAmount').value = ocrData.amount;
-  if (ocrData.date) document.getElementById('txDate').value = ocrData.date;
-  if (ocrData.note) document.getElementById('txDesc').value = ocrData.note;
+  // Read from editable fields (user may have corrected OCR mistakes)
+  const amount = parseFloat(document.getElementById('ocrAmount').value) || 0;
+  const date = document.getElementById('ocrDate').value;
+  const note = document.getElementById('ocrNote').value;
+
+  if (!amount) {
+    alert('กรุณากรอกจำนวนเงินก่อน');
+    document.getElementById('ocrAmount').focus();
+    return;
+  }
+
+  document.getElementById('txAmount').value = amount;
+  if (date) document.getElementById('txDate').value = date;
+  if (note) document.getElementById('txDesc').value = note;
+
+  // Map detected bank to default account
   if (ocrData.bank) {
     const bankMap = { kbank: 'kbank2', ktb: 'ktb1', promptpay: 'kbank1' };
     const mapped = bankMap[ocrData.bank.bank];
     if (mapped) document.getElementById('txAccount').value = mapped;
   }
+
   document.querySelector('#tab-transactions .card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
   showOcrStatus('ข้อมูลถูกเติมในฟอร์มเรียบร้อย — ตรวจสอบแล้วกด "เพิ่มรายการ"', 'success');
 }
@@ -1142,6 +1193,11 @@ function clearOcr() {
   document.getElementById('ocrResult').style.display = 'none';
   document.getElementById('slipCamera').value = '';
   document.getElementById('slipGallery').value = '';
+  // Reset editable inputs
+  document.getElementById('ocrAmount').value = '';
+  document.getElementById('ocrDate').value = '';
+  document.getElementById('ocrNote').value = '';
+  document.getElementById('ocrBank').textContent = '-';
 }
 
 function showProcessedImage() {
