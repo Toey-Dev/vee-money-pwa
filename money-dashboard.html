@@ -2,322 +2,119 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#6366f1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="VeeMoney">
-<link rel="manifest" href="./manifest.json?v=2">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=2">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2">
-<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=2">
-<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=2">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vee Money Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0a0e1a;
-  --bg-2:#0f1626;
-  --card:#151c2e;
-  --card-2:#1b2238;
-  --border:rgba(255,255,255,0.06);
-  --border-2:rgba(255,255,255,0.10);
-  --text:#f1f5f9;
-  --text-2:#94a3b8;
-  --text-3:#64748b;
-  --green:#34d399;
-  --blue:#60a5fa;
-  --yellow:#fbbf24;
-  --red:#f87171;
-  --purple:#a78bfa;
-  --teal:#2dd4bf;
-  --accent:#6366f1;
-  --kbank:#00a651;
-  --ktb:#00a5e3;
-  --safe-top:env(safe-area-inset-top);
-  --safe-bot:env(safe-area-inset-bottom);
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{overflow-x:hidden}
-body{
-  font-family:'Sarabun','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  background:radial-gradient(ellipse at top,#1a2143 0%,var(--bg) 50%);
-  background-attachment:fixed;
-  color:var(--text);
-  min-height:100vh;
-  padding:calc(20px + var(--safe-top)) 16px calc(20px + var(--safe-bot));
-  font-feature-settings:'tnum' on,'lnum' on;
-  -webkit-font-smoothing:antialiased;
-  line-height:1.4;
-}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:20px}
 .container{max-width:1200px;margin:0 auto}
-
-/* Header */
-.header{margin-bottom:24px;padding:0 4px}
-h1{font-size:26px;font-weight:800;margin-bottom:6px;color:var(--text);letter-spacing:-0.5px;background:linear-gradient(135deg,#fff 0%,#cbd5e1 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.subtitle{color:var(--text-2);font-size:13px;font-weight:500}
-
-/* Grids */
-.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:24px}
-.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:16px}
-
-/* Card */
-.card{
-  background:linear-gradient(180deg,var(--card-2) 0%,var(--card) 100%);
-  border-radius:18px;
-  padding:20px;
-  border:1px solid var(--border);
-  box-shadow:0 1px 0 rgba(255,255,255,0.04) inset,0 4px 20px rgba(0,0,0,0.25);
-  margin-bottom:16px;
-}
-.card:last-child{margin-bottom:0}
-
-/* Account card */
-.acc-card{
-  background:linear-gradient(180deg,var(--card-2) 0%,var(--card) 100%);
-  border-radius:18px;
-  padding:18px;
-  border:1px solid var(--border);
-  box-shadow:0 4px 20px rgba(0,0,0,0.25);
-  position:relative;
-  overflow:hidden;
-}
-.acc-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--acc-color,var(--blue)),transparent);
-  opacity:0.6;
-}
-.acc-row{display:flex;align-items:center;gap:14px}
-.acc-icon{
-  width:44px;height:44px;border-radius:13px;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-size:13px;color:#fff;
-  flex-shrink:0;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
-}
-.acc-icon.kbank{background:linear-gradient(135deg,#00c060 0%,#008f45 100%)}
-.acc-icon.ktb{background:linear-gradient(135deg,#1eb8f5 0%,#0085c2 100%)}
-.acc-info{flex:1;min-width:0}
-.acc-label{font-size:13px;color:var(--text-2);font-weight:500;margin-bottom:2px}
-.acc-purpose{font-size:11px;color:var(--text-3);font-weight:500}
-.acc-value{
-  font-family:'Inter','Sarabun',sans-serif;
-  font-size:24px;font-weight:700;
-  letter-spacing:-0.5px;
-  margin-top:14px;
-  display:flex;align-items:baseline;gap:4px;
-}
-.acc-value .currency{font-size:16px;font-weight:600;opacity:0.8}
-.acc-pct{font-size:11px;color:var(--text-3);margin-top:6px;font-weight:500}
-.progress-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;margin-top:10px}
-.progress-fill{height:100%;border-radius:99px;transition:width 0.5s ease;box-shadow:0 0 12px currentColor}
-
-/* Colors */
-.green{color:var(--green)}.blue{color:var(--blue)}.yellow{color:var(--yellow)}.red{color:var(--red)}.purple{color:var(--purple)}.teal{color:var(--teal)}
-
-/* Section title */
-.section-title{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text);display:flex;align-items:center;gap:8px;letter-spacing:-0.2px}
-
-/* Badges */
-.badge{font-size:10px;padding:3px 9px;border-radius:99px;font-weight:600;letter-spacing:0.2px}
-.badge-green{background:rgba(52,211,153,0.15);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25)}
-.badge-blue{background:rgba(96,165,250,0.15);color:#93c5fd;border:1px solid rgba(96,165,250,0.25)}
-.badge-yellow{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.25)}
-.badge-red{background:rgba(248,113,113,0.15);color:#fca5a5;border:1px solid rgba(248,113,113,0.25)}
-
-/* Table */
+h1{font-size:24px;font-weight:600;margin-bottom:4px;color:#f8fafc}
+.subtitle{color:#94a3b8;font-size:14px;margin-bottom:24px}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:24px}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:24px}
+.card{background:#1e293b;border-radius:12px;padding:20px;border:1px solid #334155}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.card-label{font-size:13px;color:#94a3b8;font-weight:500}
+.card-value{font-size:28px;font-weight:700;margin-bottom:4px}
+.card-sub{font-size:12px;color:#64748b}
+.bank-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+.kbank{background:#00a651;color:#fff}
+.ktb{background:#00a5e3;color:#fff}
+.progress-bar{height:8px;background:#334155;border-radius:4px;overflow:hidden;margin-top:12px}
+.progress-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.green{color:#4ade80}.blue{color:#60a5fa}.yellow{color:#fbbf24}.red{color:#f87171}.purple{color:#a78bfa}.teal{color:#2dd4bf}
+.section-title{font-size:16px;font-weight:600;margin-bottom:16px;color:#f8fafc;display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.badge-green{background:#065f46;color:#6ee7b7}
+.badge-blue{background:#1e3a5f;color:#93c5fd}
+.badge-yellow{background:#713f12;color:#fde68a}
+.badge-red{background:#7f1d1d;color:#fca5a5}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:10px 8px;color:var(--text-2);font-weight:600;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:0.4px}
-td{padding:12px 8px;border-bottom:1px solid var(--border);font-size:13px}
-tr:last-child td{border-bottom:none}
-
-/* Inputs & buttons */
-.input-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.input-row select,.input-row input,select,input[type="text"],input[type="number"],input[type="date"]{
-  background:var(--bg-2);border:1px solid var(--border-2);color:var(--text);
-  padding:11px 14px;border-radius:12px;font-size:14px;
-  font-family:inherit;
-  transition:border-color 0.2s,background 0.2s;
-}
-input:focus,select:focus{outline:none;border-color:var(--accent);background:var(--bg)}
-.input-row input{min-width:140px;flex:1}
-.input-row select{min-width:140px;flex:1}
-
-.btn{
-  padding:11px 18px;border-radius:12px;border:none;cursor:pointer;
-  font-size:13px;font-weight:600;font-family:inherit;
-  transition:transform 0.1s,filter 0.2s,background 0.2s;
-  -webkit-user-select:none;user-select:none;
-}
-.btn:active{transform:scale(0.97)}
-.btn-primary{background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#fff;box-shadow:0 4px 14px rgba(99,102,241,0.3)}
-.btn-primary:hover{filter:brightness(1.1)}
-.btn-cancel{background:rgba(255,255,255,0.08);color:var(--text);border:1px solid var(--border-2)}
-.btn-danger{background:rgba(248,113,113,0.15);color:#fca5a5;border:1px solid rgba(248,113,113,0.25);padding:6px 12px;font-size:12px}
-.btn-danger:hover{background:rgba(248,113,113,0.25)}
-.btn-scan{background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%);color:#fff;padding:11px 20px;font-size:14px}
-
-/* Chart bars */
-.chart-bar{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.chart-bar-label{min-width:70px;font-size:12px;color:var(--text-2);font-weight:500}
-.chart-bar-track{flex:1;height:22px;background:rgba(255,255,255,0.05);border-radius:8px;overflow:hidden;position:relative}
-.chart-bar-fill{height:100%;border-radius:8px;display:flex;align-items:center;padding:0 10px;font-size:11px;font-weight:600;color:#fff;min-width:fit-content;transition:width 0.5s}
-.chart-bar-amount{min-width:80px;text-align:right;font-size:13px;font-weight:600;font-family:'Inter','Sarabun',sans-serif}
-
-/* Rule cards */
-.rule-card{
-  display:flex;align-items:center;gap:14px;padding:14px;
-  background:rgba(255,255,255,0.03);
-  border:1px solid var(--border);
-  border-radius:14px;margin-bottom:10px;
-}
-.rule-card:last-child{margin-bottom:0}
-.rule-pct{font-family:'Inter','Sarabun',sans-serif;font-size:24px;font-weight:800;min-width:54px;text-align:center;letter-spacing:-1px}
-.rule-info{flex:1;min-width:0}
-.rule-name{font-weight:700;font-size:14px;margin-bottom:2px}
-.rule-desc{font-size:11px;color:var(--text-2);line-height:1.4}
-.rule-amount{font-family:'Inter','Sarabun',sans-serif;font-size:16px;font-weight:700;min-width:90px;text-align:right;letter-spacing:-0.3px}
-
-/* Tab bar */
-.tab-bar{
-  display:flex;gap:4px;margin-bottom:20px;
-  background:var(--card);
-  padding:5px;border-radius:14px;
-  border:1px solid var(--border);
-  overflow-x:auto;
-  scrollbar-width:none;
-  -webkit-overflow-scrolling:touch;
-}
-.tab-bar::-webkit-scrollbar{display:none}
-.tab{
-  padding:10px 14px;border-radius:10px;cursor:pointer;
-  font-size:13px;font-weight:600;color:var(--text-2);
-  border:none;background:none;
-  display:flex;align-items:center;gap:6px;
-  white-space:nowrap;
-  flex:1;justify-content:center;
-  font-family:inherit;
-  transition:all 0.2s;
-}
-.tab:active{transform:scale(0.96)}
-.tab.active{background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#fff;box-shadow:0 4px 12px rgba(99,102,241,0.3)}
-.tab-icon{font-size:15px}
-
-/* Goals */
-.goal-item{
-  display:flex;align-items:center;gap:14px;padding:14px;
-  background:rgba(255,255,255,0.03);
-  border:1px solid var(--border);
-  border-radius:14px;margin-bottom:10px;
-}
-.goal-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.goal-info{flex:1;min-width:0}
-.goal-name{font-weight:700;font-size:14px;margin-bottom:2px}
-.goal-detail{font-size:11px;color:var(--text-2);line-height:1.4}
-.goal-amount{text-align:right;flex-shrink:0}
-
-/* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:100;align-items:center;justify-content:center;padding:20px}
-.modal{background:var(--card-2);border-radius:20px;padding:24px;width:100%;max-width:420px;border:1px solid var(--border-2);box-shadow:0 24px 60px rgba(0,0,0,0.5)}
-.modal h3{margin-bottom:18px;font-size:18px;font-weight:700}
-.modal label{display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;margin-top:14px;font-weight:500}
-.modal input,.modal select{width:100%;font-size:14px}
-.modal-btns{display:flex;gap:10px;margin-top:22px}
-.modal-btns .btn{flex:1;padding:12px}
-
-/* Summary */
-.summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px}
-.summary-row .label{color:var(--text-2);font-weight:500}
-.summary-row .value{font-family:'Inter','Sarabun',sans-serif;font-weight:600;letter-spacing:-0.2px}
-.divider{border-top:1px solid var(--border);margin:10px 0}
-
-/* Slip / OCR */
-.slip-zone{border:2px dashed var(--border-2);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;position:relative;background:rgba(255,255,255,0.02)}
-.slip-zone:hover,.slip-zone.dragging{border-color:var(--accent);background:rgba(99,102,241,0.08)}
+th{text-align:left;padding:10px 12px;color:#94a3b8;font-weight:500;border-bottom:1px solid #334155;font-size:12px}
+td{padding:10px 12px;border-bottom:1px solid #1e293b}
+.input-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.input-row select,.input-row input{background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:8px 12px;border-radius:8px;font-size:13px}
+.input-row input{width:140px}
+.input-row select{min-width:140px}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600}
+.btn-primary{background:#3b82f6;color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-danger{background:#ef4444;color:#fff;padding:4px 10px;font-size:12px}
+.btn-danger:hover{background:#dc2626}
+.chart-bar{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.chart-bar-label{min-width:80px;font-size:12px;color:#94a3b8;text-align:right}
+.chart-bar-track{flex:1;height:24px;background:#334155;border-radius:4px;overflow:hidden;position:relative}
+.chart-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;color:#fff;min-width:fit-content}
+.rule-card{display:flex;align-items:center;gap:16px;padding:16px;background:#0f172a;border-radius:8px;margin-bottom:8px}
+.rule-pct{font-size:28px;font-weight:700;min-width:60px;text-align:center}
+.rule-info{flex:1}
+.rule-name{font-weight:600;font-size:14px;margin-bottom:2px}
+.rule-desc{font-size:12px;color:#94a3b8}
+.rule-amount{font-size:18px;font-weight:700;min-width:120px;text-align:right}
+.tab-bar{display:flex;gap:4px;margin-bottom:20px;background:#1e293b;padding:4px;border-radius:10px;width:fit-content}
+.tab{padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:#94a3b8;border:none;background:none}
+.tab.active{background:#3b82f6;color:#fff}
+.goal-item{display:flex;align-items:center;gap:12px;padding:12px;background:#0f172a;border-radius:8px;margin-bottom:8px}
+.goal-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.goal-info{flex:1}
+.goal-name{font-weight:600;font-size:14px}
+.goal-detail{font-size:12px;color:#94a3b8}
+.goal-amount{text-align:right}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:100;align-items:center;justify-content:center}
+.modal{background:#1e293b;border-radius:16px;padding:24px;width:90%;max-width:400px;border:1px solid #334155}
+.modal h3{margin-bottom:16px;font-size:18px}
+.modal label{display:block;font-size:13px;color:#94a3b8;margin-bottom:4px;margin-top:12px}
+.modal input,.modal select{width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:10px 12px;border-radius:8px;font-size:14px;margin-bottom:4px}
+.modal-btns{display:flex;gap:8px;margin-top:20px}
+.modal-btns .btn{flex:1}
+.btn-cancel{background:#334155;color:#e2e8f0}
+.summary-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
+.summary-row .label{color:#94a3b8}
+.divider{border-top:1px solid #334155;margin:8px 0}
+.slip-zone{border:2px dashed #334155;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.3s;margin-bottom:16px;position:relative}
+.slip-zone:hover{border-color:#3b82f6;background:rgba(59,130,246,0.05)}
+.slip-zone.dragging{border-color:#3b82f6;background:rgba(59,130,246,0.1)}
 .slip-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .slip-icon{font-size:36px;margin-bottom:8px}
-.slip-text{font-size:13px;color:var(--text-2)}
-.slip-text b{color:var(--blue);font-weight:600}
-.slip-preview{max-width:100%;max-height:200px;border-radius:10px;margin-top:12px;display:none}
-.ocr-status{padding:12px 14px;border-radius:10px;margin-bottom:12px;font-size:13px;display:none;font-weight:500}
-.ocr-loading{background:rgba(96,165,250,0.12);color:#93c5fd;border:1px solid rgba(96,165,250,0.25)}
-.ocr-success{background:rgba(52,211,153,0.12);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25)}
-.ocr-error{background:rgba(248,113,113,0.12);color:#fca5a5;border:1px solid rgba(248,113,113,0.25)}
-.ocr-result{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;display:none}
-.ocr-result-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
-.ocr-result-label{color:var(--text-2)}
-.ocr-result-value{font-weight:600;color:var(--text);font-family:'Inter','Sarabun',sans-serif}
-
-/* ============ MOBILE RESPONSIVE ============ */
-@media(max-width:640px){
-  body{padding:calc(16px + var(--safe-top)) 12px calc(16px + var(--safe-bot))}
-  h1{font-size:22px}
-  .subtitle{font-size:12px}
-
-  /* Account cards: single column with horizontal layout */
-  .grid-4{grid-template-columns:1fr;gap:10px;margin-bottom:18px}
-  .acc-card{padding:14px}
-  .acc-card .acc-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
-  .acc-icon{width:40px;height:40px;border-radius:11px;font-size:12px}
-  .acc-label{font-size:13px;margin-bottom:1px;font-weight:600}
-  .acc-purpose{font-size:11px}
-  .acc-value{margin-top:0;font-size:18px;justify-content:flex-end;text-align:right}
-  .acc-value .currency{font-size:13px}
-  .acc-pct{display:none}
-  .progress-bar{margin-top:12px}
-
-  .grid-2{grid-template-columns:1fr;gap:14px}
-  .card{padding:16px;border-radius:16px}
-
-  .input-row{flex-direction:column;gap:8px}
-  .input-row input,.input-row select{width:100%;min-width:0}
-
-  .tab{padding:9px 8px;font-size:12px;gap:5px}
-  .tab-icon{font-size:14px}
-
-  .rule-card{padding:12px;gap:10px}
-  .rule-pct{font-size:20px;min-width:42px}
-  .rule-name{font-size:13px}
-  .rule-desc{font-size:10.5px}
-  .rule-amount{font-size:14px;min-width:70px}
-
-  .chart-bar-label{min-width:54px;font-size:11px}
-  .chart-bar-amount{min-width:70px;font-size:12px}
-
-  table{font-size:12px}
-  th{padding:8px 6px;font-size:10px}
-  td{padding:10px 6px;font-size:12px}
-
-  .goal-item{padding:12px;gap:10px}
-  .goal-icon{width:38px;height:38px;font-size:16px}
+.slip-text{font-size:14px;color:#94a3b8}
+.slip-text b{color:#60a5fa}
+.slip-preview{max-width:100%;max-height:200px;border-radius:8px;margin-top:12px;display:none}
+.ocr-status{padding:12px;border-radius:8px;margin-bottom:12px;font-size:13px;display:none}
+.ocr-loading{background:#1e3a5f;color:#93c5fd}
+.ocr-success{background:#065f46;color:#6ee7b7}
+.ocr-error{background:#7f1d1d;color:#fca5a5}
+.ocr-result{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;margin-bottom:12px;display:none}
+.ocr-result-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.ocr-result-label{color:#94a3b8}
+.ocr-result-value{font-weight:600;color:#f8fafc}
+.btn-scan{background:#8b5cf6;color:#fff;padding:10px 20px;font-size:14px}
+.btn-scan:hover{background:#7c3aed}
+.camera-btns{display:flex;gap:8px;margin-top:12px;justify-content:center}
+@media(max-width:600px){
+  .input-row{flex-direction:column}
+  .input-row input,.input-row select{width:100%}
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-2{grid-template-columns:1fr}
+  .tab-bar{width:100%;overflow-x:auto}
+  .card-value{font-size:22px}
+  .rule-pct{font-size:22px;min-width:45px}
+  .rule-amount{font-size:15px;min-width:90px}
 }
-
-/* Tabular numbers everywhere */
-.num{font-family:'Inter','Sarabun',sans-serif;font-feature-settings:'tnum' on,'lnum' on;letter-spacing:-0.2px}
-
-/* Hide scrollbars on mobile webkit */
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 <div class="container">
-<div class="header">
-  <h1>Vee Money Dashboard</h1>
-  <p class="subtitle">ระบบจัดการเงิน 4 บัญชี · กสิกรไทย + กรุงไทย</p>
-</div>
+<h1>Vee Money Dashboard</h1>
+<p class="subtitle">ระบบจัดการเงิน 4 บัญชี | กสิกรไทย + กรุงไทย</p>
 
 <div class="grid-4" id="accountCards"></div>
 
 <div class="tab-bar">
-  <button class="tab active" onclick="switchTab('overview',event)"><span class="tab-icon">📊</span><span>ภาพรวม</span></button>
-  <button class="tab" onclick="switchTab('transactions',event)"><span class="tab-icon">💳</span><span>รายการ</span></button>
-  <button class="tab" onclick="switchTab('goals',event)"><span class="tab-icon">🎯</span><span>เป้าหมาย</span></button>
-  <button class="tab" onclick="switchTab('settings',event)"><span class="tab-icon">⚙️</span><span>ตั้งค่า</span></button>
+  <button class="tab active" onclick="switchTab('overview')">ภาพรวม</button>
+  <button class="tab" onclick="switchTab('transactions')">รายรับ-รายจ่าย</button>
+  <button class="tab" onclick="switchTab('goals')">เป้าหมาย</button>
+  <button class="tab" onclick="switchTab('settings')">ตั้งค่า</button>
 </div>
 
 <div id="tab-overview">
@@ -335,39 +132,37 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
   </div>
   <div class="card">
     <div class="section-title">รายการล่าสุด</div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead><tr><th>วันที่</th><th>รายการ</th><th>บัญชี</th><th>ประเภท</th><th style="text-align:right">จำนวน</th></tr></thead>
-        <tbody id="recentTable"></tbody>
-      </table>
-    </div>
+    <table>
+      <thead><tr><th>วันที่</th><th>รายการ</th><th>บัญชี</th><th>ประเภท</th><th style="text-align:right">จำนวน</th></tr></thead>
+      <tbody id="recentTable"></tbody>
+    </table>
   </div>
 </div>
 
 <div id="tab-transactions" style="display:none">
-  <div class="card">
+  <div class="card" style="margin-bottom:16px">
     <div class="section-title">สแกนสลิป <span class="badge badge-blue">OCR</span></div>
     <div class="slip-zone" id="slipZone" onclick="document.getElementById('slipInput').click()">
       <input type="file" id="slipInput" accept="image/*" capture="environment" onchange="handleSlipUpload(event)">
       <div class="slip-icon">📸</div>
       <div class="slip-text">แตะเพื่อ<b>ถ่ายรูป</b>หรือ<b>เลือกรูปสลิป</b></div>
-      <div class="slip-text" style="font-size:11px;margin-top:4px;color:var(--text-3)">รองรับสลิป กสิกร / กรุงไทย / พร้อมเพย์</div>
+      <div class="slip-text" style="font-size:12px;margin-top:4px">รองรับสลิป กสิกร / กรุงไทย / พร้อมเพย์</div>
       <img id="slipPreview" class="slip-preview">
     </div>
     <div class="ocr-status" id="ocrStatus"></div>
     <div class="ocr-result" id="ocrResult">
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--blue)">ผลอ่านสลิป</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#60a5fa">ผลอ่านสลิป:</div>
       <div class="ocr-result-row"><span class="ocr-result-label">จำนวนเงิน</span><span class="ocr-result-value" id="ocrAmount">-</span></div>
       <div class="ocr-result-row"><span class="ocr-result-label">วันที่</span><span class="ocr-result-value" id="ocrDate">-</span></div>
       <div class="ocr-result-row"><span class="ocr-result-label">ธนาคาร</span><span class="ocr-result-value" id="ocrBank">-</span></div>
       <div class="ocr-result-row"><span class="ocr-result-label">หมายเหตุ</span><span class="ocr-result-value" id="ocrNote">-</span></div>
-      <div style="display:flex;gap:8px;margin-top:14px">
+      <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-primary" style="flex:1" onclick="applyOcrToForm()">ใช้ข้อมูลนี้</button>
         <button class="btn btn-cancel" style="flex:1" onclick="clearOcr()">ล้าง</button>
       </div>
     </div>
   </div>
-  <div class="card">
+  <div class="card" style="margin-bottom:16px">
     <div class="section-title">เพิ่มรายการ</div>
     <div class="input-row">
       <input type="date" id="txDate">
@@ -408,18 +203,16 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
     </div>
   </div>
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
+    <div class="card-header">
       <div class="section-title" style="margin:0">ประวัติรายการ</div>
-      <select id="filterMonth" onchange="render()" style="padding:8px 12px;font-size:12px;flex:0 0 auto">
+      <select id="filterMonth" onchange="render()" style="background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:6px 10px;border-radius:8px;font-size:13px">
         <option value="all">ทั้งหมด</option>
       </select>
     </div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead><tr><th>วันที่</th><th>รายการ</th><th>บัญชี</th><th>ประเภท</th><th>หมวด</th><th style="text-align:right">จำนวน</th><th></th></tr></thead>
-        <tbody id="txTable"></tbody>
-      </table>
-    </div>
+    <table>
+      <thead><tr><th>วันที่</th><th>รายการ</th><th>บัญชี</th><th>ประเภท</th><th>หมวด</th><th style="text-align:right">จำนวน</th><th></th></tr></thead>
+      <tbody id="txTable"></tbody>
+    </table>
   </div>
 </div>
 
@@ -433,22 +226,22 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
     <div class="card">
       <div class="section-title">แนะนำเป้าหมาย</div>
       <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('เงินสำรองฉุกเฉิน','6 เดือนค่าใช้จ่าย',90000,'ktb2')">
-        <div class="goal-icon" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.25)">🛡️</div>
-        <div class="goal-info"><div class="goal-name">เงินสำรองฉุกเฉิน</div><div class="goal-detail">6 เดือน × ค่าใช้จ่ายเดือนละ 15,000 = 90,000 ฿</div></div>
+        <div class="goal-icon" style="background:#065f46">🛡</div>
+        <div class="goal-info"><div class="goal-name">เงินสำรองฉุกเฉิน</div><div class="goal-detail">6 เดือน x ค่าใช้จ่ายเดือนละ 15,000 = 90,000 ฿</div></div>
       </div>
       <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('ท่องเที่ยว','เที่ยวญี่ปุ่น',50000,'ktb1')">
-        <div class="goal-icon" style="background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.25)">✈️</div>
+        <div class="goal-icon" style="background:#1e3a5f">✈</div>
         <div class="goal-info"><div class="goal-name">ท่องเที่ยว</div><div class="goal-detail">งบเที่ยวต่างประเทศ 50,000 ฿</div></div>
       </div>
       <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('อุปกรณ์ IT','อัปเกรดคอม/อุปกรณ์',30000,'ktb1')">
-        <div class="goal-icon" style="background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.25)">💻</div>
+        <div class="goal-icon" style="background:#713f12">💻</div>
         <div class="goal-info"><div class="goal-name">อุปกรณ์ IT</div><div class="goal-detail">อัปเกรดคอม/อุปกรณ์ 30,000 ฿</div></div>
       </div>
       <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('ลงทุน','เริ่มลงทุนกองทุน/หุ้น',100000,'ktb1')">
-        <div class="goal-icon" style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.25)">📈</div>
+        <div class="goal-icon" style="background:#3b0764">📈</div>
         <div class="goal-info"><div class="goal-name">ลงทุน</div><div class="goal-detail">เริ่มลงทุนกองทุน/หุ้น 100,000 ฿</div></div>
       </div>
-      <p style="font-size:11px;color:var(--text-3);margin-top:12px;text-align:center">แตะเพื่อเพิ่มเป้าหมาย (ปรับตัวเลขได้ทีหลัง)</p>
+      <p style="font-size:12px;color:#64748b;margin-top:12px">คลิกเพื่อเพิ่มเป้าหมาย (ปรับตัวเลขได้ทีหลัง)</p>
     </div>
   </div>
 </div>
@@ -457,14 +250,14 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
   <div class="grid-2">
     <div class="card">
       <div class="section-title">ตั้งค่าเงินเดือน</div>
-      <label style="font-size:12px;color:var(--text-2);margin-bottom:6px;display:block;font-weight:500">เงินเดือนต่อเดือน (฿)</label>
-      <input type="number" id="salaryInput" style="width:100%;font-size:16px;margin-bottom:14px">
+      <label style="font-size:13px;color:#94a3b8;margin-bottom:4px;display:block">เงินเดือนต่อเดือน (฿)</label>
+      <input type="number" id="salaryInput" style="background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:10px;border-radius:8px;width:100%;font-size:16px;margin-bottom:12px">
       <button class="btn btn-primary" onclick="saveSalary()">บันทึก</button>
     </div>
     <div class="card">
-      <div class="section-title">การจัดสรรอัตโนมัติ (50/30/20)</div>
+      <div class="section-title">การจัดสรรอัตโนมัติ (กฎ 50/30/20)</div>
       <div id="allocationPreview"></div>
-      <p style="font-size:11px;color:var(--text-3);margin-top:12px">เมื่อได้รับเงินเดือน ระบบแนะนำให้แบ่งเงินตามสัดส่วนนี้</p>
+      <p style="font-size:12px;color:#64748b;margin-top:12px">เมื่อได้รับเงินเดือน ระบบแนะนำให้แบ่งเงินตามสัดส่วนนี้</p>
     </div>
   </div>
   <div class="card">
@@ -473,7 +266,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
       <button class="btn btn-primary" onclick="exportData()">📥 Export ข้อมูล (JSON)</button>
       <button class="btn btn-cancel" onclick="document.getElementById('importFile').click()">📤 Import ข้อมูล</button>
       <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
-      <button class="btn btn-danger" style="padding:11px 18px;font-size:13px" onclick="if(confirm('ลบข้อมูลทั้งหมด?')){localStorage.clear();location.reload()}">🗑 ล้างข้อมูลทั้งหมด</button>
+      <button class="btn btn-danger" onclick="if(confirm('ลบข้อมูลทั้งหมด?')){localStorage.clear();location.reload()}">🗑 ล้างข้อมูลทั้งหมด</button>
     </div>
   </div>
 </div>
@@ -502,13 +295,11 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 
 <script>
 const ACCOUNTS = {
-  kbank1: { name: 'กสิกร - เงินเดือน', short: 'เงินเดือน', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'รับเงินเดือน + แบ่งเงิน' },
-  kbank2: { name: 'กสิกร - ใช้จ่าย', short: 'ใช้จ่าย', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'ค่าใช้จ่ายรายวัน' },
-  ktb1:   { name: 'กรุงไทย - ออม', short: 'ออม', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'ออมระยะยาว + รับโอน' },
-  ktb2:   { name: 'กรุงไทย - ฉุกเฉิน', short: 'ฉุกเฉิน', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'สำรองฉุกเฉิน 3-6 เดือน' }
+  kbank1: { name: 'กสิกร - เงินเดือน', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'รับเงินเดือน + แบ่งเงิน' },
+  kbank2: { name: 'กสิกร - ใช้จ่าย', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'ค่าใช้จ่ายรายวัน' },
+  ktb1:   { name: 'กรุงไทย - ออม', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'ออมระยะยาว + รับโอน' },
+  ktb2:   { name: 'กรุงไทย - ฉุกเฉิน', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'สำรองฉุกเฉิน 3-6 เดือน' }
 };
-
-const COLORS = { kbank1: '#34d399', kbank2: '#fbbf24', ktb1: '#60a5fa', ktb2: '#a78bfa' };
 
 let state = JSON.parse(localStorage.getItem('vee_money') || 'null') || {
   salary: 0,
@@ -518,17 +309,14 @@ let state = JSON.parse(localStorage.getItem('vee_money') || 'null') || {
 };
 
 function save() { localStorage.setItem('vee_money', JSON.stringify(state)); }
-function fmt(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
-function money(n, color) {
-  const c = color ? `style="color:${color}"` : '';
-  return `<span class="num" ${c}><span class="currency">฿</span>${fmt(n)}</span>`;
-}
 
-function switchTab(tab, ev) {
+function fmt(n) { return n.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+
+function switchTab(tab) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
   document.getElementById('tab-' + tab).style.display = '';
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-  (ev?.currentTarget || ev?.target?.closest('.tab'))?.classList.add('active');
+  event.target.classList.add('active');
   if (tab === 'settings') renderSettings();
 }
 
@@ -544,22 +332,19 @@ function render() {
 
 function renderAccounts() {
   const total = Object.values(state.balances).reduce((a, b) => a + b, 0);
+  const colors = { kbank1: '#4ade80', kbank2: '#fbbf24', ktb1: '#60a5fa', ktb2: '#a78bfa' };
   let html = '';
   for (const [id, acc] of Object.entries(ACCOUNTS)) {
     const bal = state.balances[id];
     const pct = total > 0 ? Math.round(bal / total * 100) : 0;
-    const color = COLORS[id];
-    html += `<div class="acc-card" style="--acc-color:${color}">
-      <div class="acc-row">
-        <div class="acc-icon ${acc.css}">${acc.icon}</div>
-        <div class="acc-info">
-          <div class="acc-label">${acc.name}</div>
-          <div class="acc-purpose">${acc.purpose}</div>
-        </div>
-        <div class="acc-value" style="color:${color}"><span class="currency">฿</span>${fmt(bal)}</div>
+    html += `<div class="card">
+      <div class="card-header">
+        <div class="card-label">${acc.name}</div>
+        <div class="bank-icon ${acc.css}">${acc.icon}</div>
       </div>
-      <div class="acc-pct">${pct}% ของยอดรวม</div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color};color:${color}"></div></div>
+      <div class="card-value" style="color:${colors[id]}">฿${fmt(bal)}</div>
+      <div class="card-sub">${acc.purpose} (${pct}%)</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${colors[id]}"></div></div>
     </div>`;
   }
   document.getElementById('accountCards').innerHTML = html;
@@ -570,19 +355,15 @@ function renderRules() {
   const rules = [
     { pct: 50, name: 'จำเป็น', desc: 'ค่าเช่า, อาหาร, เดินทาง, สาธารณูปโภค', color: '#fbbf24', account: 'กสิกร - ใช้จ่าย' },
     { pct: 30, name: 'ต้องการ', desc: 'บันเทิง, ท่องเที่ยว, ของใช้ไม่จำเป็น', color: '#60a5fa', account: 'กสิกร - ใช้จ่าย' },
-    { pct: 20, name: 'ออม/ลงทุน', desc: 'เก็บออม, กองทุน, ฉุกเฉิน', color: '#34d399', account: 'กรุงไทย - ออม + ฉุกเฉิน' }
+    { pct: 20, name: 'ออม/ลงทุน', desc: 'เก็บออม, กองทุน, ฉุกเฉิน', color: '#4ade80', account: 'กรุงไทย - ออม + ฉุกเฉิน' }
   ];
   let html = '';
   for (const r of rules) {
     const amount = Math.round(salary * r.pct / 100);
     html += `<div class="rule-card">
       <div class="rule-pct" style="color:${r.color}">${r.pct}%</div>
-      <div class="rule-info">
-        <div class="rule-name">${r.name}</div>
-        <div class="rule-desc">${r.desc}</div>
-        <div class="rule-desc" style="margin-top:3px;color:var(--text-3)">→ ${r.account}</div>
-      </div>
-      <div class="rule-amount" style="color:${r.color}"><span style="font-size:0.75em;opacity:0.8">฿</span> ${fmt(amount)}</div>
+      <div class="rule-info"><div class="rule-name">${r.name}</div><div class="rule-desc">${r.desc}</div><div class="rule-desc" style="margin-top:2px">→ ${r.account}</div></div>
+      <div class="rule-amount" style="color:${r.color}">฿${fmt(amount)}</div>
     </div>`;
   }
   document.getElementById('ruleCards').innerHTML = html;
@@ -590,15 +371,15 @@ function renderRules() {
 
 function renderBars() {
   const total = Object.values(state.balances).reduce((a, b) => a + b, 0);
+  const colors = { kbank1: '#4ade80', kbank2: '#fbbf24', ktb1: '#60a5fa', ktb2: '#a78bfa' };
   let html = '';
   for (const [id, acc] of Object.entries(ACCOUNTS)) {
     const bal = state.balances[id];
     const pct = total > 0 ? Math.round(bal / total * 100) : 0;
-    const color = COLORS[id];
     html += `<div class="chart-bar">
-      <div class="chart-bar-label">${acc.short}</div>
-      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.max(pct, 3)}%;background:${color}">${pct}%</div></div>
-      <div class="chart-bar-amount"><span style="opacity:0.7">฿</span> ${fmt(bal)}</div>
+      <div class="chart-bar-label">${acc.name.split(' - ')[1]}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.max(pct, 2)}%;background:${colors[id]}">${pct}%</div></div>
+      <div style="min-width:90px;text-align:right;font-size:13px;font-weight:600">฿${fmt(bal)}</div>
     </div>`;
   }
   document.getElementById('accountBars').innerHTML = html;
@@ -608,10 +389,10 @@ function renderBars() {
   const savings = state.balances.ktb1 + state.balances.ktb2;
 
   document.getElementById('summaryStats').innerHTML = `
-    <div class="summary-row"><span class="label">ยอดรวมทุกบัญชี</span><span class="value">฿ ${fmt(total)}</span></div>
-    <div class="summary-row"><span class="label">รายรับรวม</span><span class="value green">+฿ ${fmt(totalIncome)}</span></div>
-    <div class="summary-row"><span class="label">รายจ่ายรวม</span><span class="value red">−฿ ${fmt(totalExpense)}</span></div>
-    <div class="summary-row"><span class="label">เงินออม (กรุงไทย)</span><span class="value blue">฿ ${fmt(savings)}</span></div>
+    <div class="summary-row"><span class="label">ยอมรวมทุกบัญชี</span><span style="font-weight:600;color:#f8fafc">฿${fmt(total)}</span></div>
+    <div class="summary-row"><span class="label">รายรับรวม</span><span class="green">+฿${fmt(totalIncome)}</span></div>
+    <div class="summary-row"><span class="label">รายจ่ายรวม</span><span class="red">-฿${fmt(totalExpense)}</span></div>
+    <div class="summary-row"><span class="label">เงินออม (กรุงไทย)</span><span class="blue">฿${fmt(savings)}</span></div>
   `;
 }
 
@@ -622,19 +403,19 @@ function renderRecent() {
     const acc = ACCOUNTS[tx.account];
     const isIncome = tx.type === 'income';
     const isTransfer = tx.type === 'transfer';
-    const colorClass = isIncome ? 'green' : isTransfer ? 'blue' : 'red';
-    const sign = isIncome ? '+' : isTransfer ? '↔' : '−';
+    const color = isIncome ? 'green' : isTransfer ? 'blue' : 'red';
+    const sign = isIncome ? '+' : isTransfer ? '↔' : '-';
     const badge = isIncome ? 'badge-green' : isTransfer ? 'badge-blue' : 'badge-red';
     const typeLabel = isIncome ? 'รายรับ' : isTransfer ? 'โอน' : 'รายจ่าย';
     html += `<tr>
-      <td style="white-space:nowrap">${tx.date}</td>
+      <td>${tx.date}</td>
       <td>${tx.desc || tx.category}</td>
-      <td style="white-space:nowrap">${acc.short}</td>
+      <td><span class="bank-icon ${acc.css}" style="width:24px;height:24px;font-size:9px;display:inline-flex">${acc.icon}</span> ${acc.name.split(' - ')[1]}</td>
       <td><span class="badge ${badge}">${typeLabel}</span></td>
-      <td style="text-align:right;font-weight:600;white-space:nowrap" class="${colorClass} num">${sign}฿ ${fmt(tx.amount)}</td>
+      <td style="text-align:right;font-weight:600" class="${color}">${sign}฿${fmt(tx.amount)}</td>
     </tr>`;
   }
-  if (!recent.length) html = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:24px">ยังไม่มีรายการ</td></tr>';
+  if (!recent.length) html = '<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px">ยังไม่มีรายการ</td></tr>';
   document.getElementById('recentTable').innerHTML = html;
 }
 
@@ -648,22 +429,22 @@ function renderTransactions() {
     const acc = ACCOUNTS[tx.account];
     const isIncome = tx.type === 'income';
     const isTransfer = tx.type === 'transfer';
-    const colorClass = isIncome ? 'green' : isTransfer ? 'blue' : 'red';
-    const sign = isIncome ? '+' : isTransfer ? '↔' : '−';
+    const color = isIncome ? 'green' : isTransfer ? 'blue' : 'red';
+    const sign = isIncome ? '+' : isTransfer ? '↔' : '-';
     const badge = isIncome ? 'badge-green' : isTransfer ? 'badge-blue' : 'badge-red';
     const typeLabel = isIncome ? 'รายรับ' : isTransfer ? 'โอน' : 'รายจ่าย';
     const realIdx = state.transactions.indexOf(tx);
     html += `<tr>
-      <td style="white-space:nowrap">${tx.date}</td>
+      <td>${tx.date}</td>
       <td>${tx.desc || '-'}</td>
-      <td style="white-space:nowrap">${acc.short}</td>
+      <td>${acc.name}</td>
       <td><span class="badge ${badge}">${typeLabel}</span></td>
       <td>${tx.category}</td>
-      <td style="text-align:right;font-weight:600;white-space:nowrap" class="${colorClass} num">${sign}฿ ${fmt(tx.amount)}</td>
+      <td style="text-align:right;font-weight:600" class="${color}">${sign}฿${fmt(tx.amount)}</td>
       <td><button class="btn btn-danger" onclick="deleteTx(${realIdx})">ลบ</button></td>
     </tr>`;
   }
-  if (!txs.length) html = '<tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:24px">ไม่มีรายการ</td></tr>';
+  if (!txs.length) html = '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px">ไม่มีรายการ</td></tr>';
   document.getElementById('txTable').innerHTML = html;
 }
 
@@ -683,24 +464,22 @@ function renderGoals() {
     const g = state.goals[i];
     const current = state.balances[g.account] || 0;
     const pct = g.target > 0 ? Math.min(Math.round(current / g.target * 100), 100) : 0;
-    const color = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--blue)';
+    const color = pct >= 100 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#60a5fa';
     html += `<div class="goal-item">
-      <div style="min-width:50px;text-align:center">
-        <div class="num" style="font-size:22px;font-weight:800;color:${color};letter-spacing:-0.5px">${pct}%</div>
-      </div>
+      <div style="min-width:50px;text-align:center"><div style="font-size:24px;font-weight:700;color:${color}">${pct}%</div></div>
       <div class="goal-info">
         <div class="goal-name">${g.name}</div>
-        <div class="goal-detail">${g.desc} · ${ACCOUNTS[g.account]?.name || g.account}</div>
-        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${pct}%;background:${color};color:${color}"></div></div>
+        <div class="goal-detail">${g.desc} | ${ACCOUNTS[g.account]?.name || g.account}</div>
+        <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
       </div>
       <div class="goal-amount">
-        <div class="num" style="font-size:13px;font-weight:700;color:${color}">฿ ${fmt(current)}</div>
-        <div class="num" style="font-size:11px;color:var(--text-3);margin-top:2px">/ ฿ ${fmt(g.target)}</div>
-        <button class="btn btn-danger" style="margin-top:6px" onclick="deleteGoal(${i})">ลบ</button>
+        <div style="font-size:14px;font-weight:600;color:${color}">฿${fmt(current)}</div>
+        <div style="font-size:11px;color:#64748b">/ ฿${fmt(g.target)}</div>
+        <button class="btn btn-danger" style="margin-top:4px" onclick="deleteGoal(${i})">ลบ</button>
       </div>
     </div>`;
   }
-  if (!state.goals.length) html = '<p style="text-align:center;color:var(--text-3);padding:20px;font-size:13px">ยังไม่มีเป้าหมาย — เพิ่มได้ด้านล่างหรือเลือกจากคำแนะนำ</p>';
+  if (!state.goals.length) html = '<p style="text-align:center;color:#64748b;padding:20px">ยังไม่มีเป้าหมาย — เพิ่มได้ด้านล่างหรือเลือกจากคำแนะนำด้านขวา</p>';
   list.innerHTML = html;
 }
 
@@ -708,14 +487,14 @@ function renderSettings() {
   document.getElementById('salaryInput').value = state.salary || '';
   const salary = state.salary || 0;
   const alloc = [
-    { name: 'กสิกร - ใช้จ่าย (50% จำเป็น)', amount: Math.round(salary * 0.5), color: 'var(--yellow)' },
-    { name: 'กสิกร - ใช้จ่าย (30% ต้องการ)', amount: Math.round(salary * 0.3), color: 'var(--blue)' },
-    { name: 'กรุงไทย - ออม (15%)', amount: Math.round(salary * 0.15), color: 'var(--green)' },
-    { name: 'กรุงไทย - ฉุกเฉิน (5%)', amount: Math.round(salary * 0.05), color: 'var(--purple)' }
+    { name: 'กสิกร - ใช้จ่าย (50% จำเป็น)', amount: Math.round(salary * 0.5), color: '#fbbf24' },
+    { name: 'กสิกร - ใช้จ่าย (30% ต้องการ)', amount: Math.round(salary * 0.3), color: '#60a5fa' },
+    { name: 'กรุงไทย - ออม (15%)', amount: Math.round(salary * 0.15), color: '#4ade80' },
+    { name: 'กรุงไทย - ฉุกเฉิน (5%)', amount: Math.round(salary * 0.05), color: '#a78bfa' }
   ];
   let html = '';
   for (const a of alloc) {
-    html += `<div class="summary-row"><span class="label">${a.name}</span><span class="value" style="color:${a.color}">฿ ${fmt(a.amount)}</span></div>`;
+    html += `<div class="summary-row"><span class="label">${a.name}</span><span style="color:${a.color};font-weight:600">฿${fmt(a.amount)}</span></div>`;
   }
   document.getElementById('allocationPreview').innerHTML = html;
 }
@@ -764,7 +543,7 @@ function deleteTx(idx) {
 function saveSalary() {
   state.salary = parseFloat(document.getElementById('salaryInput').value) || 0;
   save(); render(); renderSettings();
-  alert('บันทึกเงินเดือนเรียบร้อย: ฿ ' + fmt(state.salary));
+  alert('บันทึกเงินเดือนเรียบร้อย: ฿' + fmt(state.salary));
 }
 
 function openGoalModal() { document.getElementById('goalModal').style.display = 'flex'; }
@@ -828,6 +607,7 @@ document.getElementById('txDate').value = new Date().toISOString().split('T')[0]
 // ============ OCR Slip Reading ============
 let ocrData = { amount: null, date: null, bank: null, note: '' };
 
+// Drag & drop support
 const slipZone = document.getElementById('slipZone');
 slipZone.addEventListener('dragover', e => { e.preventDefault(); slipZone.classList.add('dragging'); });
 slipZone.addEventListener('dragleave', () => slipZone.classList.remove('dragging'));
@@ -844,6 +624,7 @@ function handleSlipUpload(event) {
 }
 
 function processSlipFile(file) {
+  // Show preview
   const preview = document.getElementById('slipPreview');
   const reader = new FileReader();
   reader.onload = e => {
@@ -874,7 +655,11 @@ async function scanSlip(file) {
         }
       }
     });
-    parseSlipText(result.data.text);
+
+    const text = result.data.text;
+    console.log('OCR raw text:', text);
+    parseSlipText(text);
+
   } catch (err) {
     console.error('OCR Error:', err);
     showOcrStatus('ไม่สามารถอ่านสลิปได้ กรุณาลองถ่ายรูปใหม่ให้ชัดขึ้น', 'error');
@@ -883,31 +668,44 @@ async function scanSlip(file) {
 
 function parseSlipText(text) {
   ocrData = { amount: null, date: null, bank: null, note: '' };
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // --- Extract amount ---
+  // Patterns: "1,000.00 บาท", "฿1,000", "THB 1,000.00", "จำนวนเงิน 1,000"
   const amountPatterns = [
     /(?:จำนวน(?:เงิน)?|amount|ยอด(?:เงิน)?|ยอดโอน)\s*[:=]?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
     /([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)\s*(?:บาท|baht|THB)/i,
     /(?:฿|THB)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)/i,
-    /([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{2})?)/
+    /([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{2})?)/  // fallback: any comma-formatted number
   ];
+
   for (const pat of amountPatterns) {
     const m = text.match(pat);
     if (m) {
       const val = parseFloat(m[1].replace(/,/g, ''));
-      if (val > 0 && val < 10000000) { ocrData.amount = val; break; }
+      if (val > 0 && val < 10000000) { // reasonable range
+        ocrData.amount = val;
+        break;
+      }
     }
   }
 
+  // --- Extract date ---
+  // Thai slip formats: "24 เม.ย. 2569", "24/04/2569", "24 Apr 2026", "2026-04-24"
   const thaiMonths = { 'ม.ค.': '01', 'ก.พ.': '02', 'มี.ค.': '03', 'เม.ย.': '04', 'พ.ค.': '05', 'มิ.ย.': '06',
     'ก.ค.': '07', 'ส.ค.': '08', 'ก.ย.': '09', 'ต.ค.': '10', 'พ.ย.': '11', 'ธ.ค.': '12',
     'มกราคม': '01', 'กุมภาพันธ์': '02', 'มีนาคม': '03', 'เมษายน': '04', 'พฤษภาคม': '05', 'มิถุนายน': '06',
     'กรกฎาคม': '07', 'สิงหาคม': '08', 'กันยายน': '09', 'ตุลาคม': '10', 'พฤศจิกายน': '11', 'ธันวาคม': '12' };
 
+  // Try dd/mm/yyyy or dd-mm-yyyy
   const dateSlash = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
   if (dateSlash) {
     let [, d, m, y] = dateSlash;
-    if (parseInt(y) > 2500) y = String(parseInt(y) - 543);
+    if (parseInt(y) > 2500) y = String(parseInt(y) - 543); // convert พ.ศ. to ค.ศ.
     ocrData.date = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
   }
+
+  // Try Thai month format: "24 เม.ย. 2569"
   if (!ocrData.date) {
     for (const [thm, num] of Object.entries(thaiMonths)) {
       const pat = new RegExp(`(\\d{1,2})\\s*${thm.replace('.', '\\.')}\\s*(\\d{4})`);
@@ -920,6 +718,8 @@ function parseSlipText(text) {
       }
     }
   }
+
+  // Try ISO format yyyy-mm-dd
   if (!ocrData.date) {
     const iso = text.match(/(\d{4})-(\d{2})-(\d{2})/);
     if (iso) {
@@ -929,6 +729,7 @@ function parseSlipText(text) {
     }
   }
 
+  // --- Detect bank ---
   const bankPatterns = [
     { pattern: /กสิกร|kasikorn|kbank|k\s*bank|k-?plus/i, bank: 'kbank', label: 'กสิกรไทย' },
     { pattern: /กรุงไทย|krungthai|ktb|เป๋าตัง|paotang/i, bank: 'ktb', label: 'กรุงไทย' },
@@ -936,10 +737,15 @@ function parseSlipText(text) {
     { pattern: /ไทยพาณิชย์|scb|siam commercial/i, bank: 'other', label: 'ไทยพาณิชย์' },
     { pattern: /พร้อมเพย์|promptpay|prompt\s*pay/i, bank: 'promptpay', label: 'พร้อมเพย์' }
   ];
+
   for (const bp of bankPatterns) {
-    if (bp.pattern.test(text)) { ocrData.bank = bp; break; }
+    if (bp.pattern.test(text)) {
+      ocrData.bank = bp;
+      break;
+    }
   }
 
+  // --- Extract note/memo ---
   const notePatterns = [
     /(?:หมายเหตุ|บันทึก|memo|note|ref)\s*[:=]?\s*(.+)/i,
     /(?:ผู้รับ|to|โอนให้)\s*[:=]?\s*(.+)/i
@@ -949,26 +755,33 @@ function parseSlipText(text) {
     if (m) { ocrData.note = m[1].trim().substring(0, 50); break; }
   }
 
+  // --- Display results ---
   showOcrStatus('อ่านสลิปสำเร็จ! ตรวจสอบข้อมูลด้านล่าง', 'success');
   document.getElementById('ocrResult').style.display = 'block';
-  document.getElementById('ocrAmount').textContent = ocrData.amount ? `฿ ${fmt(ocrData.amount)}` : 'ไม่พบ (กรอกเอง)';
+  document.getElementById('ocrAmount').textContent = ocrData.amount ? `฿${fmt(ocrData.amount)}` : 'ไม่พบ (กรอกเอง)';
   document.getElementById('ocrDate').textContent = ocrData.date || 'ไม่พบ (ใช้วันนี้)';
   document.getElementById('ocrBank').textContent = ocrData.bank ? ocrData.bank.label : 'ไม่พบ (เลือกเอง)';
   document.getElementById('ocrNote').textContent = ocrData.note || '-';
-  document.getElementById('ocrAmount').style.color = ocrData.amount ? 'var(--green)' : 'var(--yellow)';
-  document.getElementById('ocrDate').style.color = ocrData.date ? 'var(--green)' : 'var(--yellow)';
-  document.getElementById('ocrBank').style.color = ocrData.bank ? 'var(--green)' : 'var(--yellow)';
+
+  // Highlight found vs not found
+  document.getElementById('ocrAmount').style.color = ocrData.amount ? '#4ade80' : '#fbbf24';
+  document.getElementById('ocrDate').style.color = ocrData.date ? '#4ade80' : '#fbbf24';
+  document.getElementById('ocrBank').style.color = ocrData.bank ? '#4ade80' : '#fbbf24';
 }
 
 function applyOcrToForm() {
   if (ocrData.amount) document.getElementById('txAmount').value = ocrData.amount;
   if (ocrData.date) document.getElementById('txDate').value = ocrData.date;
   if (ocrData.note) document.getElementById('txDesc').value = ocrData.note;
+
+  // Map bank to account
   if (ocrData.bank) {
     const bankMap = { kbank: 'kbank2', ktb: 'ktb1', promptpay: 'kbank1' };
     const mapped = bankMap[ocrData.bank.bank];
     if (mapped) document.getElementById('txAccount').value = mapped;
   }
+
+  // Scroll to form
   document.querySelector('#tab-transactions .card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
   showOcrStatus('ข้อมูลถูกเติมในฟอร์มเรียบร้อย — ตรวจสอบแล้วกด "เพิ่มรายการ"', 'success');
 }
@@ -982,19 +795,6 @@ function clearOcr() {
 }
 
 render();
-
-// ============ PWA Service Worker ============
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => {
-        console.log('SW registered:', reg.scope);
-        // Force update check
-        reg.update();
-      })
-      .catch(err => console.log('SW registration failed:', err));
-  });
-}
 </script>
 </body>
 </html>
