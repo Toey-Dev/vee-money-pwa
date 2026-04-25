@@ -369,6 +369,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
         <button class="btn btn-primary" style="flex:1" onclick="applyOcrToForm()">ใช้ข้อมูลนี้</button>
         <button class="btn btn-cancel" style="flex:1" onclick="clearOcr()">ล้าง</button>
       </div>
+      <button class="btn btn-cancel" style="width:100%;margin-top:8px;font-size:12px;padding:8px;opacity:0.8" onclick="showProcessedImage()">🔍 ดูภาพที่ปรับแล้ว (Debug)</button>
     </div>
   </div>
   <div class="card">
@@ -481,6 +482,24 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
     </div>
   </div>
 </div>
+</div>
+
+<div class="modal-overlay" id="processedModal" onclick="if(event.target===this)closeProcessedModal()">
+  <div class="modal" style="max-width:560px;max-height:88vh;overflow-y:auto">
+    <h3>เปรียบเทียบภาพต้นฉบับ vs ภาพที่ปรับแล้ว</h3>
+    <p style="font-size:12px;color:var(--text-2);margin-bottom:14px;line-height:1.5">ถ้า OCR อ่านพลาด ดูภาพ "หลังปรับ" ว่าตัวเลขยังชัดอยู่ไหม — ถ้าไม่ชัดแสดงว่าต้นฉบับเบลอ/มืดเกินไป ลองถ่ายใหม่ให้ตั้งฉากกับสลิป แสงสว่างพอ</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:600">📷 ต้นฉบับ</div>
+        <img id="origPreview" style="width:100%;border-radius:10px;border:1px solid var(--border);display:block">
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:600">🪄 หลังปรับ (ส่งเข้า OCR)</div>
+        <img id="procPreview" style="width:100%;border-radius:10px;border:1px solid var(--border);background:#fff;display:block">
+      </div>
+    </div>
+    <button class="btn btn-cancel" style="width:100%;margin-top:18px" onclick="closeProcessedModal()">ปิด</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="goalModal">
@@ -865,12 +884,105 @@ function showOcrStatus(msg, type) {
   el.style.display = 'block';
 }
 
+// Saved between scans for debug view
+let lastOriginalImage = null;
+let lastProcessedImage = null;
+
+function fileToDataUrl(file) {
+  return new Promise(resolve => {
+    const r = new FileReader();
+    r.onload = e => resolve(e.target.result);
+    r.readAsDataURL(file);
+  });
+}
+
+// Image preprocessing: grayscale → contrast → adaptive threshold
+// Removes background watermarks/textures so OCR sees clean text
+async function preprocessImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onerror = reject;
+    img.onload = () => {
+      // Resize huge phone photos to keep OCR fast
+      const maxDim = 1800;
+      let { width, height } = img;
+      const scale = Math.min(1, maxDim / Math.max(width, height));
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+
+      // Pass 1: grayscale + S-curve contrast
+      for (let i = 0; i < data.length; i += 4) {
+        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        let v = gray / 255;
+        v = v < 0.5 ? 2 * v * v : 1 - 2 * (1 - v) * (1 - v);
+        const out = Math.round(v * 255);
+        data[i] = data[i + 1] = data[i + 2] = out;
+      }
+
+      // Pass 2: adaptive threshold (Bradley-Roth via integral image)
+      const winSize = Math.max(15, Math.round(width / 50));
+      const t = 0.15; // 0.10–0.20 works well
+      const len = width * height;
+      const integral = new Float64Array(len);
+      for (let y = 0; y < height; y++) {
+        let rowSum = 0;
+        for (let x = 0; x < width; x++) {
+          const idx = y * width + x;
+          rowSum += data[idx * 4];
+          integral[idx] = (y > 0 ? integral[idx - width] : 0) + rowSum;
+        }
+      }
+      const half = Math.floor(winSize / 2);
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const x1 = Math.max(0, x - half);
+          const x2 = Math.min(width - 1, x + half);
+          const y1 = Math.max(0, y - half);
+          const y2 = Math.min(height - 1, y + half);
+          const count = (x2 - x1 + 1) * (y2 - y1 + 1);
+          let sum = integral[y2 * width + x2];
+          if (x1 > 0) sum -= integral[y2 * width + x1 - 1];
+          if (y1 > 0) sum -= integral[(y1 - 1) * width + x2];
+          if (x1 > 0 && y1 > 0) sum += integral[(y1 - 1) * width + x1 - 1];
+          const i = (y * width + x) * 4;
+          const v = data[i] * count < sum * (1 - t) ? 0 : 255;
+          data[i] = data[i + 1] = data[i + 2] = v;
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      canvas.toBlob(blob => {
+        resolve({ blob, dataUrl: canvas.toDataURL('image/png') });
+      }, 'image/png');
+    };
+    fileToDataUrl(file).then(url => { img.src = url; });
+  });
+}
+
 async function scanSlip(file) {
-  showOcrStatus('กำลังอ่านสลิป... โปรดรอสักครู่ (อาจใช้เวลา 5-15 วินาที)', 'loading');
+  showOcrStatus('กำลังปรับภาพ...', 'loading');
   document.getElementById('ocrResult').style.display = 'none';
 
   try {
-    const result = await Tesseract.recognize(file, 'tha+eng', {
+    // Save original for debug view
+    lastOriginalImage = await fileToDataUrl(file);
+
+    // Preprocess
+    const { blob, dataUrl } = await preprocessImage(file);
+    lastProcessedImage = dataUrl;
+
+    showOcrStatus('กำลังอ่านสลิป... 0%', 'loading');
+
+    const result = await Tesseract.recognize(blob, 'tha+eng', {
       logger: m => {
         if (m.status === 'recognizing text') {
           const pct = Math.round((m.progress || 0) * 100);
@@ -979,11 +1091,27 @@ function applyOcrToForm() {
 
 function clearOcr() {
   ocrData = { amount: null, date: null, bank: null, note: '' };
+  lastOriginalImage = null;
+  lastProcessedImage = null;
   document.getElementById('slipPreview').style.display = 'none';
   document.getElementById('ocrStatus').style.display = 'none';
   document.getElementById('ocrResult').style.display = 'none';
   document.getElementById('slipCamera').value = '';
   document.getElementById('slipGallery').value = '';
+}
+
+function showProcessedImage() {
+  if (!lastProcessedImage || !lastOriginalImage) {
+    alert('ยังไม่มีภาพ — อัปโหลดสลิปก่อน');
+    return;
+  }
+  document.getElementById('origPreview').src = lastOriginalImage;
+  document.getElementById('procPreview').src = lastProcessedImage;
+  document.getElementById('processedModal').style.display = 'flex';
+}
+
+function closeProcessedModal() {
+  document.getElementById('processedModal').style.display = 'none';
 }
 
 render();
