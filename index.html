@@ -127,6 +127,11 @@ h1{font-size:26px;font-weight:800;margin-bottom:6px;color:var(--text);letter-spa
 .badge-yellow{background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.25)}
 .badge-red{background:rgba(248,113,113,0.15);color:#fca5a5;border:1px solid rgba(248,113,113,0.25)}
 
+/* Bank tag in tables — distinguishes account column from category column */
+.acc-tag{display:inline-block;font-size:9px;font-weight:700;color:#fff;padding:2px 5px;border-radius:6px;margin-right:6px;vertical-align:1px;letter-spacing:0.3px}
+.acc-tag.kbank{background:linear-gradient(135deg,#00c060,#008f45)}
+.acc-tag.ktb{background:linear-gradient(135deg,#1eb8f5,#0085c2)}
+
 /* Table */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;padding:10px 8px;color:var(--text-2);font-weight:600;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:0.4px}
@@ -174,11 +179,9 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
   border-radius:14px;margin-bottom:10px;
 }
 .rule-card:last-child{margin-bottom:0}
-.rule-pct{font-family:'Inter','Sarabun',sans-serif;font-size:24px;font-weight:800;min-width:54px;text-align:center;letter-spacing:-1px}
 .rule-info{flex:1;min-width:0}
 .rule-name{font-weight:700;font-size:14px;margin-bottom:2px}
 .rule-desc{font-size:11px;color:var(--text-2);line-height:1.4}
-.rule-amount{font-family:'Inter','Sarabun',sans-serif;font-size:16px;font-weight:700;min-width:90px;text-align:right;letter-spacing:-0.3px}
 
 /* Tab bar */
 .tab-bar{
@@ -253,6 +256,20 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 .ocr-input.text-left{text-align:left}
 .ocr-hint{font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4}
 
+/* Report stats */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.stat-label{font-size:11px;color:var(--text-2);font-weight:500;margin-bottom:4px}
+.stat-value{font-family:'Inter','Sarabun',sans-serif;font-size:18px;font-weight:700;letter-spacing:-0.3px;white-space:nowrap}
+.stat-sub{font-size:10px;color:var(--text-3);margin-top:3px}
+
+/* Trend chart */
+.trend-chart{display:flex;align-items:flex-end;gap:8px;padding-top:10px}
+.trend-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.trend-bars{display:flex;gap:3px;align-items:flex-end;height:110px;width:100%;justify-content:center}
+.trend-bar{width:13px;border-radius:4px 4px 0 0;min-height:2px}
+.trend-label{font-size:10px;color:var(--text-3);white-space:nowrap}
+
 /* ============ MOBILE RESPONSIVE ============ */
 @media(max-width:640px){
   body{padding:calc(16px + var(--safe-top)) 12px calc(16px + var(--safe-bot))}
@@ -281,10 +298,8 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
   .tab-icon{font-size:14px}
 
   .rule-card{padding:12px;gap:10px}
-  .rule-pct{font-size:20px;min-width:42px}
   .rule-name{font-size:13px}
   .rule-desc{font-size:10.5px}
-  .rule-amount{font-size:14px;min-width:70px}
 
   .chart-bar-label{min-width:54px;font-size:11px}
   .chart-bar-amount{min-width:70px;font-size:12px}
@@ -319,6 +334,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 <div class="tab-bar">
   <button class="tab active" onclick="switchTab('overview',event)"><span class="tab-icon">📊</span><span>ภาพรวม</span></button>
   <button class="tab" onclick="switchTab('transactions',event)"><span class="tab-icon">💳</span><span>รายการ</span></button>
+  <button class="tab" onclick="switchTab('reports',event)"><span class="tab-icon">📈</span><span>รายงาน</span></button>
   <button class="tab" onclick="switchTab('goals',event)"><span class="tab-icon">🎯</span><span>เป้าหมาย</span></button>
   <button class="tab" onclick="switchTab('settings',event)"><span class="tab-icon">⚙️</span><span>ตั้งค่า</span></button>
 </div>
@@ -326,8 +342,8 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 <div id="tab-overview">
   <div class="grid-2">
     <div class="card">
-      <div class="section-title">กฎ 50/30/20 <span class="badge badge-blue">แนะนำ</span></div>
-      <div id="ruleCards"></div>
+      <div class="section-title">แผนประจำเดือน <span class="badge badge-blue" id="planMonthLabel"></span></div>
+      <div id="planList"></div>
     </div>
     <div class="card">
       <div class="section-title">สัดส่วนบัญชี</div>
@@ -335,6 +351,10 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
       <div class="divider"></div>
       <div id="summaryStats"></div>
     </div>
+  </div>
+  <div class="card">
+    <div class="section-title">เป้าออมปีนี้ <span class="badge badge-green" id="yearGoalBadge"></span></div>
+    <div id="yearGoalCard"></div>
   </div>
   <div class="card">
     <div class="section-title">รายการล่าสุด</div>
@@ -393,35 +413,14 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
     <div class="section-title">เพิ่มรายการ</div>
     <div class="input-row">
       <input type="date" id="txDate">
-      <select id="txAccount">
-        <option value="kbank1">กสิกร - เงินเดือน</option>
-        <option value="kbank2">กสิกร - ใช้จ่าย</option>
-        <option value="ktb1">กรุงไทย - ออม</option>
-        <option value="ktb2">กรุงไทย - ฉุกเฉิน</option>
-      </select>
+      <select id="txAccount"></select>
       <select id="txType">
         <option value="income">รายรับ</option>
         <option value="expense">รายจ่าย</option>
         <option value="transfer">โอนระหว่างบัญชี</option>
       </select>
-      <select id="txCategory" style="display:none">
-        <option value="">เลือกบัญชีปลายทาง</option>
-        <option value="kbank1">กสิกร - เงินเดือน</option>
-        <option value="kbank2">กสิกร - ใช้จ่าย</option>
-        <option value="ktb1">กรุงไทย - ออม</option>
-        <option value="ktb2">กรุงไทย - ฉุกเฉิน</option>
-      </select>
-      <select id="txCatNormal">
-        <option value="เงินเดือน">เงินเดือน</option>
-        <option value="โอนรับ">โอนรับจากคนอื่น</option>
-        <option value="อาหาร">อาหาร</option>
-        <option value="เดินทาง">เดินทาง</option>
-        <option value="ของใช้">ของใช้</option>
-        <option value="บันเทิง">บันเทิง</option>
-        <option value="ค่าเช่า/ผ่อน">ค่าเช่า/ผ่อน</option>
-        <option value="สาธารณูปโภค">สาธารณูปโภค</option>
-        <option value="อื่นๆ">อื่นๆ</option>
-      </select>
+      <select id="txCategory" style="display:none"></select>
+      <select id="txCatNormal"></select>
     </div>
     <div class="input-row">
       <input type="text" id="txDesc" placeholder="รายละเอียด">
@@ -441,6 +440,45 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
         <thead><tr><th>วันที่</th><th>รายการ</th><th>บัญชี</th><th>ประเภท</th><th>หมวด</th><th style="text-align:right">จำนวน</th><th></th></tr></thead>
         <tbody id="txTable"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<div id="tab-reports" style="display:none">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
+      <div class="section-title" style="margin:0">สรุปรายเดือน</div>
+      <select id="reportMonth" onchange="renderReports()" style="padding:8px 12px;font-size:12px;flex:0 0 auto"></select>
+    </div>
+    <div class="stat-grid" id="reportStats"></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">รายจ่ายตามหมวด</div>
+      <div id="reportCatBars"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">เทียบกับเดือนก่อน</div>
+      <div id="reportCompare"></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">รายจ่ายสูงสุด 5 อันดับ</div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>วันที่</th><th>รายการ</th><th>หมวด</th><th style="text-align:right">จำนวน</th></tr></thead>
+          <tbody id="reportTopExpense"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">แนวโน้ม 6 เดือน</div>
+      <div class="trend-chart" id="reportTrend"></div>
+      <div style="display:flex;gap:14px;justify-content:center;margin-top:12px;font-size:11px;color:var(--text-2)">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--green);vertical-align:-1px"></span> รายรับ</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--red);vertical-align:-1px"></span> รายจ่าย</span>
+      </div>
     </div>
   </div>
 </div>
@@ -478,16 +516,27 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 <div id="tab-settings" style="display:none">
   <div class="grid-2">
     <div class="card">
-      <div class="section-title">ตั้งค่าเงินเดือน</div>
-      <label style="font-size:12px;color:var(--text-2);margin-bottom:6px;display:block;font-weight:500">เงินเดือนต่อเดือน (฿)</label>
-      <input type="number" id="salaryInput" style="width:100%;font-size:16px;margin-bottom:14px">
-      <button class="btn btn-primary" onclick="saveSalary()">บันทึก</button>
+      <div class="section-title">เป้าหมายการออม & งบบัตร</div>
+      <label style="font-size:12px;color:var(--text-2);margin-bottom:6px;display:block;font-weight:500">เป้าออมต่อปี ขั้นต่ำ (฿)</label>
+      <input type="number" id="yearGoalMin" style="width:100%;margin-bottom:12px">
+      <label style="font-size:12px;color:var(--text-2);margin-bottom:6px;display:block;font-weight:500">เป้าออมต่อปี ท้าทาย (฿)</label>
+      <input type="number" id="yearGoalMax" style="width:100%;margin-bottom:12px">
+      <label style="font-size:12px;color:var(--text-2);margin-bottom:6px;display:block;font-weight:500">งบบัตรเครดิตต่อเดือน (฿)</label>
+      <input type="number" id="cardBudgetInput" style="width:100%;margin-bottom:14px">
+      <button class="btn btn-primary" onclick="saveGoalSettings()">บันทึก</button>
     </div>
     <div class="card">
-      <div class="section-title">การจัดสรรอัตโนมัติ (50/30/20)</div>
-      <div id="allocationPreview"></div>
-      <p style="font-size:11px;color:var(--text-3);margin-top:12px">เมื่อได้รับเงินเดือน ระบบแนะนำให้แบ่งเงินตามสัดส่วนนี้</p>
+      <div class="section-title">แผนประจำเดือน</div>
+      <div id="planManage"></div>
+      <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="openPlanModal()">+ เพิ่มรายการประจำ</button>
+      <p style="font-size:11px;color:var(--text-3);margin-top:10px">รายการที่เกิดซ้ำทุกเดือน เช่น เงินเดือน บำนาญ โอนเก็บออม — หน้าภาพรวมจะเตือนและบันทึกให้ในคลิกเดียว</p>
     </div>
+  </div>
+  <div class="card">
+    <div class="section-title">จัดการบัญชี</div>
+    <div id="accountsManage"></div>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="saveAccountsMeta()">บันทึกการตั้งค่าบัญชี</button>
+    <p style="font-size:11px;color:var(--text-3);margin-top:10px">"นับเป็นเงินออม" ใช้คำนวณเป้าออมรายปี · บัญชีที่ซ่อนจะไม่แสดงการ์ดหน้าหลัก แต่ยังเลือกทำรายการได้ตามปกติ</p>
   </div>
   <div class="card">
     <div class="section-title">จัดการข้อมูล</div>
@@ -519,6 +568,38 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
   </div>
 </div>
 
+<div class="modal-overlay" id="planModal">
+  <div class="modal">
+    <h3 id="planModalTitle">เพิ่มรายการประจำ</h3>
+    <label>ชื่อรายการ</label>
+    <input type="text" id="planDesc" placeholder="เช่น เงินเดือน, บำนาญ, โอนเก็บออม">
+    <label>ประเภท</label>
+    <select id="planType" onchange="updatePlanModalUI()">
+      <option value="income">รายรับ</option>
+      <option value="expense">รายจ่าย</option>
+      <option value="transfer">โอนระหว่างบัญชี</option>
+    </select>
+    <label>บัญชี</label>
+    <select id="planAccount"></select>
+    <div id="planDestRow">
+      <label>บัญชีปลายทาง</label>
+      <select id="planDest"></select>
+    </div>
+    <div id="planCatRow">
+      <label>หมวด</label>
+      <select id="planCategory"></select>
+    </div>
+    <label>จำนวนเงิน (฿)</label>
+    <input type="number" id="planAmount" placeholder="0">
+    <label>วันที่ของเดือน (1–31 · ใส่ 31 = สิ้นเดือน)</label>
+    <input type="number" id="planDay" min="1" max="31" placeholder="25">
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closePlanModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="savePlanItem()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="goalModal">
   <div class="modal">
     <h3>เพิ่มเป้าหมายการออม</h3>
@@ -529,10 +610,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
     <label>จำนวนเงินเป้าหมาย (฿)</label>
     <input type="number" id="goalTarget" placeholder="0">
     <label>บัญชีเป้าหมาย</label>
-    <select id="goalAccount">
-      <option value="ktb1">กรุงไทย - ออม</option>
-      <option value="ktb2">กรุงไทย - ฉุกเฉิน</option>
-    </select>
+    <select id="goalAccount"></select>
     <div class="modal-btns">
       <button class="btn btn-cancel" onclick="closeGoalModal()">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveGoal()">บันทึก</button>
@@ -550,32 +628,114 @@ const ACCOUNTS = {
 
 const COLORS = { kbank1: '#34d399', kbank2: '#fbbf24', ktb1: '#60a5fa', ktb2: '#a78bfa' };
 
-let state = JSON.parse(localStorage.getItem('vee_money') || 'null') || {
-  salary: 0,
-  balances: { kbank1: 0, kbank2: 0, ktb1: 0, ktb2: 0 },
-  transactions: [],
-  goals: []
-};
+let state = null;
+try { state = JSON.parse(localStorage.getItem('vee_money') || 'null'); } catch {}
+state = state || { balances: { kbank1: 0, kbank2: 0, ktb1: 0, ktb2: 0 }, transactions: [], goals: [] };
+
+// ===== Migrations: fill new/missing fields — runs at load AND after every import =====
+function migrateState(s) {
+  if (!s || typeof s !== 'object' || Array.isArray(s)) throw new Error('invalid state shape');
+  s.balances = Object.assign({ kbank1: 0, kbank2: 0, ktb1: 0, ktb2: 0 }, s.balances || {});
+  if (!Array.isArray(s.transactions)) s.transactions = [];
+  if (!Array.isArray(s.goals)) s.goals = [];
+  if (!Array.isArray(s.plan)) s.plan = [
+    { id: 1, day: 31, type: 'income', account: 'kbank1', amount: 40000, category: 'เงินเดือน', desc: 'เงินเดือน' },
+    { id: 2, day: 25, type: 'income', account: 'ktb1', amount: 11000, category: 'บำนาญ', desc: 'บำนาญ' },
+    { id: 3, day: 31, type: 'transfer', account: 'kbank1', dest: 'ktb1', amount: 29000, category: '', desc: 'โอนเก็บออม' }
+  ];
+  if (!s.yearGoal || typeof s.yearGoal !== 'object') s.yearGoal = {};
+  if (typeof s.yearGoal.min !== 'number') s.yearGoal.min = 300000;
+  if (typeof s.yearGoal.max !== 'number') s.yearGoal.max = Math.max(360000, s.yearGoal.min);
+  if (typeof s.cardBudget !== 'number') s.cardBudget = 10000;
+  if (!s.accountsMeta || typeof s.accountsMeta !== 'object') s.accountsMeta = {};
+  return s;
+}
+migrateState(state);
+
+// ===== Editable account metadata (name/purpose/saving flag/hidden) =====
+const ACCOUNT_DEFAULTS = JSON.parse(JSON.stringify(ACCOUNTS));
+const DEFAULT_SAVING = { ktb1: true, ktb2: true };
+function accMeta(id) { return state.accountsMeta[id] || {}; }
+function isSaving(id) { const m = accMeta(id); return m.saving === undefined ? !!DEFAULT_SAVING[id] : !!m.saving; }
+function isHidden(id) { return !!accMeta(id).hidden; }
+function applyAccountsMeta() {
+  for (const [id, acc] of Object.entries(ACCOUNTS)) {
+    const d = ACCOUNT_DEFAULTS[id], m = accMeta(id);
+    acc.short = m.short || d.short;
+    acc.name = (acc.css === 'kbank' ? 'กสิกร' : 'กรุงไทย') + ' - ' + acc.short;
+    acc.purpose = m.purpose || d.purpose;
+  }
+}
+applyAccountsMeta();
+
+// Account dropdowns are built from ACCOUNTS so renames show up everywhere
+function accountOptions() {
+  return Object.entries(ACCOUNTS).map(([id, a]) => `<option value="${id}">${esc(a.name)}</option>`).join('');
+}
+function refreshAccountSelects() {
+  for (const sid of ['txAccount', 'planAccount', 'planDest', 'goalAccount']) {
+    const el = document.getElementById(sid);
+    const cur = el.value;
+    el.innerHTML = accountOptions();
+    if (cur) el.value = cur;
+  }
+  const txCat = document.getElementById('txCategory');
+  const cur = txCat.value;
+  txCat.innerHTML = '<option value="">เลือกบัญชีปลายทาง</option>' + accountOptions();
+  txCat.value = cur;
+}
 
 function save() { localStorage.setItem('vee_money', JSON.stringify(state)); }
 function fmt(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
-function money(n, color) {
-  const c = color ? `style="color:${color}"` : '';
-  return `<span class="num" ${c}><span class="currency">฿</span>${fmt(n)}</span>`;
+
+// Local-time date helpers — toISOString() is UTC and shifts the date/month
+// back one day between 00:00–07:00 Thai time, so never use it for calendar logic
+function localISODate(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function currentMonthStr() { return localISODate().substring(0, 7); }
+
+// Transfers historically store the destination account id in `category`;
+// txDest() is the single decode point (new records also carry an explicit `dest`)
+function txDest(t) { return t.type === 'transfer' ? (t.dest || t.category || null) : null; }
+
+// Apply (dir = +1) or revert (dir = -1) a transaction's effect on balances —
+// the ONLY place balance math lives; add/delete/plan all go through here
+function applyTxBalances(tx, dir) {
+  const amt = tx.amount * dir;
+  if (tx.type === 'income') state.balances[tx.account] += amt;
+  else if (tx.type === 'expense') state.balances[tx.account] -= amt;
+  else if (tx.type === 'transfer') {
+    const dest = txDest(tx);
+    if (dest) { state.balances[tx.account] -= amt; state.balances[dest] += amt; }
+  }
 }
 
+// "2026-07-10" → "10 ก.ค. 69" (BE short year)
+function fmtDate(iso) {
+  const [y, m, d] = (iso || '').split('-').map(Number);
+  if (!y || !m || !d) return iso;
+  return `${d} ${THAI_MONTHS_ABBR[m - 1]} ${String((y + 543) % 100).padStart(2, '0')}`;
+}
+
+// Account cell with bank tag (KB/KT) so it reads differently from category
+function accCell(acc) {
+  return `<span class="acc-tag ${acc.css}">${acc.icon}</span>${esc(acc.short)}`;
+}
 function switchTab(tab, ev) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
   document.getElementById('tab-' + tab).style.display = '';
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   (ev?.currentTarget || ev?.target?.closest('.tab'))?.classList.add('active');
   if (tab === 'settings') renderSettings();
+  if (tab === 'reports') renderReports();
 }
 
 function render() {
   renderAccounts();
-  renderRules();
+  renderPlan();
   renderBars();
+  renderYearGoal();
   renderRecent();
   renderTransactions();
   renderGoals();
@@ -589,12 +749,13 @@ function renderAccounts() {
     const bal = state.balances[id];
     const pct = total > 0 ? Math.round(bal / total * 100) : 0;
     const color = COLORS[id];
+    if (isHidden(id)) continue;
     html += `<div class="acc-card" style="--acc-color:${color}">
       <div class="acc-row">
         <div class="acc-icon ${acc.css}">${acc.icon}</div>
         <div class="acc-info">
-          <div class="acc-label">${acc.name}</div>
-          <div class="acc-purpose">${acc.purpose}</div>
+          <div class="acc-label">${esc(acc.name)}</div>
+          <div class="acc-purpose">${esc(acc.purpose)}</div>
         </div>
         <div class="acc-value" style="color:${color}"><span class="currency">฿</span>${fmt(bal)}</div>
       </div>
@@ -605,27 +766,144 @@ function renderAccounts() {
   document.getElementById('accountCards').innerHTML = html;
 }
 
-function renderRules() {
-  const salary = state.salary || 0;
-  const rules = [
-    { pct: 50, name: 'จำเป็น', desc: 'ค่าเช่า, อาหาร, เดินทาง, สาธารณูปโภค', color: '#fbbf24', account: 'กสิกร - ใช้จ่าย' },
-    { pct: 30, name: 'ต้องการ', desc: 'บันเทิง, ท่องเที่ยว, ของใช้ไม่จำเป็น', color: '#60a5fa', account: 'กสิกร - ใช้จ่าย' },
-    { pct: 20, name: 'ออม/ลงทุน', desc: 'เก็บออม, กองทุน, ฉุกเฉิน', color: '#34d399', account: 'กรุงไทย - ออม + ฉุกเฉิน' }
-  ];
+// ============ Monthly Plan (recurring items) ============
+function planDateThisMonth(item) {
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const day = Math.min(item.day, daysInMonth);
+  return { day, date: `${currentMonthStr()}-${String(day).padStart(2, '0')}`, due: now.getDate() >= day };
+}
+
+function planOccurredThisMonth(item, monthStr) {
+  return state.transactions.some(t => t.planId === item.id && t.date.substring(0, 7) === monthStr);
+}
+
+// Create the transaction + move balances for one plan item (no save/render)
+function applyPlanItem(item, date) {
+  if ((item.type === 'expense' || item.type === 'transfer') && item.amount > state.balances[item.account]) {
+    if (!confirm(`ยอดคงเหลือ "${ACCOUNTS[item.account].name}" มี ฿ ${fmt(state.balances[item.account])} ไม่พอสำหรับ "${item.desc}" (฿ ${fmt(item.amount)})\nบันทึกแล้วยอดจะติดลบ — ยืนยันหรือไม่?`)) return false;
+  }
+  const tx = {
+    date, account: item.account, type: item.type, amount: item.amount, desc: item.desc,
+    category: item.type === 'transfer' ? item.dest : item.category,
+    id: Date.now() + Math.floor(Math.random() * 1000), planId: item.id
+  };
+  if (item.type === 'transfer') tx.dest = item.dest;
+  state.transactions.push(tx);
+  applyTxBalances(tx, 1);
+  return true;
+}
+
+function recordPlanItem(id) {
+  const item = state.plan.find(p => p.id === id);
+  if (!item) return;
+  const monthStr = currentMonthStr();
+  if (planOccurredThisMonth(item, monthStr)) { alert('รายการนี้บันทึกไปแล้วเดือนนี้'); return; }
+  const { date } = planDateThisMonth(item);
+  if (applyPlanItem(item, date)) { save(); render(); }
+}
+
+function recordAllDuePlan() {
+  const monthStr = currentMonthStr();
+  let count = 0;
+  for (const item of state.plan) {
+    const { date, due } = planDateThisMonth(item);
+    if (due && !planOccurredThisMonth(item, monthStr) && applyPlanItem(item, date)) count++;
+  }
+  if (count) { save(); render(); }
+}
+
+function renderPlan() {
+  const el = document.getElementById('planList');
+  const monthStr = currentMonthStr();
+  document.getElementById('planMonthLabel').textContent = fmtMonth(monthStr);
   let html = '';
-  for (const r of rules) {
-    const amount = Math.round(salary * r.pct / 100);
+  let duePending = 0;
+  for (const item of state.plan) {
+    const { day, due } = planDateThisMonth(item);
+    const done = planOccurredThisMonth(item, monthStr);
+    const sign = item.type === 'income' ? '+' : item.type === 'expense' ? '−' : '↔';
+    const color = item.type === 'income' ? 'var(--green)' : item.type === 'expense' ? 'var(--red)' : 'var(--blue)';
+    const target = item.type === 'transfer'
+      ? `${ACCOUNTS[item.account]?.short || '?'} → ${ACCOUNTS[item.dest]?.short || '?'}`
+      : (ACCOUNTS[item.account]?.short || '?');
+    let status;
+    if (done) status = '<span class="badge badge-green">✓ บันทึกแล้ว</span>';
+    else if (due) { duePending++; status = `<button class="btn btn-primary" style="padding:7px 14px;font-size:12px" onclick="recordPlanItem(${item.id})">บันทึก</button>`; }
+    else status = `<span class="badge badge-yellow">รอวันที่ ${day}</span>`;
     html += `<div class="rule-card">
-      <div class="rule-pct" style="color:${r.color}">${r.pct}%</div>
-      <div class="rule-info">
-        <div class="rule-name">${r.name}</div>
-        <div class="rule-desc">${r.desc}</div>
-        <div class="rule-desc" style="margin-top:3px;color:var(--text-3)">→ ${r.account}</div>
+      <div style="min-width:40px;text-align:center;flex-shrink:0">
+        <div style="font-size:9px;color:var(--text-3)">วันที่</div>
+        <div class="num" style="font-size:18px;font-weight:800">${day}</div>
       </div>
-      <div class="rule-amount" style="color:${r.color}"><span style="font-size:0.75em;opacity:0.8">฿</span> ${fmt(amount)}</div>
+      <div class="rule-info">
+        <div class="rule-name">${esc(item.desc)}</div>
+        <div class="rule-desc">${esc(target)} · <span style="color:${color}" class="num">${sign}฿ ${fmt(item.amount)}</span></div>
+      </div>
+      <div style="flex-shrink:0">${status}</div>
     </div>`;
   }
-  document.getElementById('ruleCards').innerHTML = html;
+  if (!state.plan.length) html = '<p style="text-align:center;color:var(--text-3);padding:20px;font-size:13px">ยังไม่มีแผน — เพิ่มได้ที่ ตั้งค่า → แผนประจำเดือน</p>';
+  if (duePending >= 2) html += `<button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="recordAllDuePlan()">⚡ บันทึกทั้งหมดที่ถึงกำหนด (${duePending} รายการ)</button>`;
+  el.innerHTML = html;
+}
+
+// ============ Yearly Savings Goal ============
+// Net money flowing INTO savings-flagged accounts this year:
+// income in = +, expense out = −, transfer in from non-saving = +, transfer out to non-saving = −
+function savedInYear(year) {
+  let sum = 0;
+  for (const t of state.transactions) {
+    if (!t.date.startsWith(year + '-')) continue;
+    const fromSaving = isSaving(t.account);
+    const dest = txDest(t);
+    if (t.type === 'income' && fromSaving) sum += t.amount;
+    else if (t.type === 'expense' && fromSaving) sum -= t.amount;
+    else if (t.type === 'transfer' && dest) {
+      const toSaving = isSaving(dest);
+      if (toSaving && !fromSaving) sum += t.amount;
+      else if (fromSaving && !toSaving) sum -= t.amount;
+    }
+  }
+  return sum;
+}
+
+function renderYearGoal() {
+  const el = document.getElementById('yearGoalCard');
+  const now = new Date();
+  const year = now.getFullYear();
+  document.getElementById('yearGoalBadge').textContent = 'พ.ศ. ' + (year + 543);
+  const saved = savedInYear(String(year));
+  const { min, max } = state.yearGoal;
+  const monthNum = now.getMonth() + 1;
+  const monthsLeft = 12 - monthNum;
+  const projected = Math.round(saved / monthNum * 12);
+  const pct = max > 0 ? Math.max(0, Math.min(100, Math.round(saved / max * 100))) : 0;
+  const minMark = max > 0 ? Math.min(100, Math.round(min / max * 100)) : 0;
+  const needMin = monthsLeft > 0 ? Math.max(0, Math.ceil((min - saved) / monthsLeft)) : Math.max(0, min - saved);
+  const needMax = monthsLeft > 0 ? Math.max(0, Math.ceil((max - saved) / monthsLeft)) : Math.max(0, max - saved);
+  const onTrack = projected >= min;
+  const monthStr = currentMonthStr();
+  const cardSpent = state.transactions.filter(t => t.type === 'expense' && t.category === 'บัตรเครดิต' && t.date.substring(0, 7) === monthStr).reduce((a, t) => a + t.amount, 0);
+  const cardLeft = state.cardBudget - cardSpent;
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <span class="num" style="font-size:28px;font-weight:800;letter-spacing:-0.5px;color:${saved >= min ? 'var(--green)' : 'var(--blue)'}">฿ ${fmt(saved)}</span>
+      <span style="font-size:12px;color:var(--text-2)">ออมสะสมปีนี้ · เป้า ฿ ${fmt(min)} – ${fmt(max)}</span>
+    </div>
+    <div class="progress-bar" style="position:relative;height:10px">
+      <div class="progress-fill" style="width:${pct}%;background:var(--green);color:var(--green)"></div>
+      <div style="position:absolute;top:-2px;bottom:-2px;left:${minMark}%;width:2px;background:var(--yellow)"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-top:4px">
+      <span>฿ 0</span><span style="color:var(--yellow)">ขั้นต่ำ ฿ ${fmt(min)}</span><span>฿ ${fmt(max)}</span>
+    </div>
+    <div class="divider"></div>
+    <div class="summary-row"><span class="label">คาดการณ์สิ้นปี (เฉลี่ยจาก ${monthNum} เดือน)</span><span class="value" style="color:${onTrack ? 'var(--green)' : 'var(--yellow)'}">${onTrack ? '✓' : '⚠'} ฿ ${fmt(projected)}</span></div>
+    <div class="summary-row"><span class="label">ต้องออมเฉลี่ยเดือนละ (เหลือ ${monthsLeft} เดือน)</span><span class="value">฿ ${fmt(needMin)} – ${fmt(needMax)}</span></div>
+    <div class="summary-row"><span class="label">บัตรเครดิตเดือนนี้ (งบ ฿ ${fmt(state.cardBudget)})</span><span class="value" style="color:${cardLeft < 0 ? 'var(--red)' : 'var(--teal)'}">ใช้ไป ฿ ${fmt(cardSpent)} · เหลือ ฿ ${fmt(cardLeft)}</span></div>
+  `;
 }
 
 function renderBars() {
@@ -635,8 +913,9 @@ function renderBars() {
     const bal = state.balances[id];
     const pct = total > 0 ? Math.round(bal / total * 100) : 0;
     const color = COLORS[id];
+    if (isHidden(id)) continue;
     html += `<div class="chart-bar">
-      <div class="chart-bar-label">${acc.short}</div>
+      <div class="chart-bar-label">${esc(acc.short)}</div>
       <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.max(pct, 3)}%;background:${color}">${pct}%</div></div>
       <div class="chart-bar-amount"><span style="opacity:0.7">฿</span> ${fmt(bal)}</div>
     </div>`;
@@ -645,13 +924,13 @@ function renderBars() {
 
   const totalIncome = state.transactions.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0);
   const totalExpense = state.transactions.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
-  const savings = state.balances.ktb1 + state.balances.ktb2;
+  const savings = Object.keys(state.balances).filter(isSaving).reduce((a, id) => a + state.balances[id], 0);
 
   document.getElementById('summaryStats').innerHTML = `
     <div class="summary-row"><span class="label">ยอดรวมทุกบัญชี</span><span class="value">฿ ${fmt(total)}</span></div>
     <div class="summary-row"><span class="label">รายรับรวม</span><span class="value green">+฿ ${fmt(totalIncome)}</span></div>
     <div class="summary-row"><span class="label">รายจ่ายรวม</span><span class="value red">−฿ ${fmt(totalExpense)}</span></div>
-    <div class="summary-row"><span class="label">เงินออม (กรุงไทย)</span><span class="value blue">฿ ${fmt(savings)}</span></div>
+    <div class="summary-row"><span class="label">เงินออมรวม</span><span class="value blue">฿ ${fmt(savings)}</span></div>
   `;
 }
 
@@ -667,9 +946,9 @@ function renderRecent() {
     const badge = isIncome ? 'badge-green' : isTransfer ? 'badge-blue' : 'badge-red';
     const typeLabel = isIncome ? 'รายรับ' : isTransfer ? 'โอน' : 'รายจ่าย';
     html += `<tr>
-      <td style="white-space:nowrap">${tx.date}</td>
-      <td>${tx.desc || tx.category}</td>
-      <td style="white-space:nowrap">${acc.short}</td>
+      <td style="white-space:nowrap">${fmtDate(tx.date)}</td>
+      <td>${esc(tx.desc || tx.category)}</td>
+      <td style="white-space:nowrap">${accCell(acc)}</td>
       <td><span class="badge ${badge}">${typeLabel}</span></td>
       <td style="text-align:right;font-weight:600;white-space:nowrap" class="${colorClass} num">${sign}฿ ${fmt(tx.amount)}</td>
     </tr>`;
@@ -693,12 +972,16 @@ function renderTransactions() {
     const badge = isIncome ? 'badge-green' : isTransfer ? 'badge-blue' : 'badge-red';
     const typeLabel = isIncome ? 'รายรับ' : isTransfer ? 'โอน' : 'รายจ่าย';
     const realIdx = state.transactions.indexOf(tx);
+    const dest = txDest(tx);
+    const catLabel = isTransfer
+      ? (ACCOUNTS[dest] ? `→ ${accCell(ACCOUNTS[dest])}` : '-')
+      : esc(tx.category);
     html += `<tr>
-      <td style="white-space:nowrap">${tx.date}</td>
-      <td>${tx.desc || '-'}</td>
-      <td style="white-space:nowrap">${acc.short}</td>
+      <td style="white-space:nowrap">${fmtDate(tx.date)}</td>
+      <td>${esc(tx.desc || '-')}</td>
+      <td style="white-space:nowrap">${accCell(acc)}</td>
       <td><span class="badge ${badge}">${typeLabel}</span></td>
-      <td>${tx.category}</td>
+      <td style="white-space:nowrap">${catLabel}</td>
       <td style="text-align:right;font-weight:600;white-space:nowrap" class="${colorClass} num">${sign}฿ ${fmt(tx.amount)}</td>
       <td><button class="btn btn-danger" onclick="deleteTx(${realIdx})">ลบ</button></td>
     </tr>`;
@@ -710,7 +993,7 @@ function renderTransactions() {
 function renderMonthFilter() {
   const months = [...new Set(state.transactions.map(t => t.date.substring(0, 7)))].sort().reverse();
   let html = '<option value="all">ทั้งหมด</option>';
-  for (const m of months) html += `<option value="${m}">${m}</option>`;
+  for (const m of months) html += `<option value="${m}">${fmtMonth(m)}</option>`;
   const sel = document.getElementById('filterMonth');
   if (sel) { const cur = sel.value; sel.innerHTML = html; sel.value = cur || 'all'; }
 }
@@ -745,19 +1028,260 @@ function renderGoals() {
 }
 
 function renderSettings() {
-  document.getElementById('salaryInput').value = state.salary || '';
-  const salary = state.salary || 0;
-  const alloc = [
-    { name: 'กสิกร - ใช้จ่าย (50% จำเป็น)', amount: Math.round(salary * 0.5), color: 'var(--yellow)' },
-    { name: 'กสิกร - ใช้จ่าย (30% ต้องการ)', amount: Math.round(salary * 0.3), color: 'var(--blue)' },
-    { name: 'กรุงไทย - ออม (15%)', amount: Math.round(salary * 0.15), color: 'var(--green)' },
-    { name: 'กรุงไทย - ฉุกเฉิน (5%)', amount: Math.round(salary * 0.05), color: 'var(--purple)' }
-  ];
+  document.getElementById('yearGoalMin').value = state.yearGoal.min || '';
+  document.getElementById('yearGoalMax').value = state.yearGoal.max || '';
+  document.getElementById('cardBudgetInput').value = state.cardBudget || '';
+  renderPlanManage();
+  renderAccountsManage();
+}
+
+function saveGoalSettings() {
+  const min = parseFloat(document.getElementById('yearGoalMin').value) || 0;
+  const max = parseFloat(document.getElementById('yearGoalMax').value) || min;
+  state.yearGoal = { min, max: Math.max(min, max) };
+  state.cardBudget = parseFloat(document.getElementById('cardBudgetInput').value) || 0;
+  // No renderSettings() here — it would rebuild the account inputs and wipe unsaved edits
+  save(); render();
+  alert('บันทึกเป้าหมายเรียบร้อย');
+}
+
+// ---- Plan management (settings) ----
+function renderPlanManage() {
+  const el = document.getElementById('planManage');
   let html = '';
-  for (const a of alloc) {
-    html += `<div class="summary-row"><span class="label">${a.name}</span><span class="value" style="color:${a.color}">฿ ${fmt(a.amount)}</span></div>`;
+  for (const item of state.plan) {
+    const typeLabel = item.type === 'income' ? 'รายรับ' : item.type === 'expense' ? 'รายจ่าย' : 'โอน';
+    const badge = item.type === 'income' ? 'badge-green' : item.type === 'expense' ? 'badge-red' : 'badge-blue';
+    const target = item.type === 'transfer'
+      ? `${ACCOUNTS[item.account]?.short || '?'} → ${ACCOUNTS[item.dest]?.short || '?'}`
+      : (ACCOUNTS[item.account]?.short || '?');
+    html += `<div class="rule-card">
+      <div class="rule-info">
+        <div class="rule-name">${esc(item.desc)} <span class="badge ${badge}">${typeLabel}</span></div>
+        <div class="rule-desc">ทุกวันที่ ${item.day}${item.day >= 29 ? ' (หรือสิ้นเดือน)' : ''} · ${esc(target)} · <span class="num">฿ ${fmt(item.amount)}</span></div>
+      </div>
+      <button class="btn btn-cancel" style="padding:6px 12px;font-size:12px;flex-shrink:0" onclick="openPlanModal(${item.id})">แก้ไข</button>
+      <button class="btn btn-danger" style="flex-shrink:0" onclick="deletePlanItem(${item.id})">ลบ</button>
+    </div>`;
   }
-  document.getElementById('allocationPreview').innerHTML = html;
+  el.innerHTML = html || '<p style="text-align:center;color:var(--text-3);padding:16px;font-size:13px">ยังไม่มีรายการประจำ</p>';
+}
+
+let editingPlanId = null;
+
+function openPlanModal(id) {
+  editingPlanId = id ?? null;
+  const item = id != null ? state.plan.find(p => p.id === id) : null;
+  document.getElementById('planModalTitle').textContent = item ? 'แก้ไขรายการประจำ' : 'เพิ่มรายการประจำ';
+  document.getElementById('planDesc').value = item?.desc || '';
+  document.getElementById('planType').value = item?.type || 'income';
+  document.getElementById('planAccount').value = item?.account || 'kbank1';
+  document.getElementById('planDest').value = item?.dest || 'ktb1';
+  document.getElementById('planAmount').value = item?.amount || '';
+  document.getElementById('planDay').value = item?.day || 25;
+  updatePlanModalUI();
+  if (item && item.type !== 'transfer' && item.category) document.getElementById('planCategory').value = item.category;
+  document.getElementById('planModal').style.display = 'flex';
+}
+
+function closePlanModal() { document.getElementById('planModal').style.display = 'none'; }
+
+function updatePlanModalUI() {
+  const type = document.getElementById('planType').value;
+  const isTransfer = type === 'transfer';
+  document.getElementById('planDestRow').style.display = isTransfer ? '' : 'none';
+  document.getElementById('planCatRow').style.display = isTransfer ? 'none' : '';
+  if (!isTransfer) {
+    document.getElementById('planCategory').innerHTML = CATS_BY_TYPE[type].map(([v, label]) => `<option value="${v}">${label}</option>`).join('');
+  }
+}
+
+function savePlanItem() {
+  const desc = document.getElementById('planDesc').value.trim();
+  const type = document.getElementById('planType').value;
+  const account = document.getElementById('planAccount').value;
+  const dest = document.getElementById('planDest').value;
+  const amount = parseFloat(document.getElementById('planAmount').value) || 0;
+  const day = Math.min(31, Math.max(1, parseInt(document.getElementById('planDay').value) || 1));
+  if (!desc || !amount) { alert('กรุณากรอกชื่อรายการและจำนวนเงิน'); return; }
+  if (type === 'transfer' && dest === account) { alert('บัญชีต้นทางและปลายทางต้องไม่ใช่บัญชีเดียวกัน'); return; }
+  const category = type === 'transfer' ? '' : document.getElementById('planCategory').value;
+  const fields = { desc, type, account, dest: type === 'transfer' ? dest : undefined, amount, day, category };
+  if (editingPlanId != null) {
+    const item = state.plan.find(p => p.id === editingPlanId);
+    if (item) Object.assign(item, fields);
+  } else {
+    state.plan.push({ id: Date.now(), ...fields });
+  }
+  save(); render(); renderPlanManage(); closePlanModal();
+}
+
+function deletePlanItem(id) {
+  if (!confirm('ลบรายการประจำนี้? (รายการที่บันทึกไปแล้วไม่ถูกลบ)')) return;
+  state.plan = state.plan.filter(p => p.id !== id);
+  save(); render(); renderPlanManage();
+}
+
+// ---- Account management (settings) ----
+function renderAccountsManage() {
+  const el = document.getElementById('accountsManage');
+  let html = '';
+  for (const [id, acc] of Object.entries(ACCOUNTS)) {
+    html += `<div class="rule-card" style="flex-wrap:wrap">
+      <div class="acc-icon ${acc.css}" style="width:36px;height:36px;font-size:11px;border-radius:10px">${acc.icon}</div>
+      <div class="rule-info" style="min-width:180px">
+        <input data-acc="${id}" data-field="short" value="${esc(acc.short)}" placeholder="ชื่อเรียก" style="width:100%;margin-bottom:6px;padding:8px 12px;font-size:13px">
+        <input data-acc="${id}" data-field="purpose" value="${esc(acc.purpose)}" placeholder="คำอธิบาย" style="width:100%;padding:8px 12px;font-size:13px">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--text-2)">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-acc="${id}" data-field="saving" ${isSaving(id) ? 'checked' : ''}> นับเป็นเงินออม</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-acc="${id}" data-field="hidden" ${isHidden(id) ? 'checked' : ''}> ซ่อนจากหน้าหลัก</label>
+      </div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function saveAccountsMeta() {
+  document.querySelectorAll('#accountsManage [data-acc]').forEach(inp => {
+    const id = inp.dataset.acc, f = inp.dataset.field;
+    state.accountsMeta[id] = state.accountsMeta[id] || {};
+    if (f === 'saving' || f === 'hidden') state.accountsMeta[id][f] = inp.checked;
+    else state.accountsMeta[id][f] = inp.value.trim();
+  });
+  applyAccountsMeta();
+  refreshAccountSelects();
+  save(); render(); renderSettings();
+  alert('บันทึกการตั้งค่าบัญชีเรียบร้อย');
+}
+
+// ============ Monthly Reports ============
+const THAI_MONTHS_ABBR = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const CAT_COLORS = { 'อาหาร': '#fbbf24', 'เดินทาง': '#60a5fa', 'ของใช้': '#2dd4bf', 'บันเทิง': '#a78bfa', 'ค่าเช่า/ผ่อน': '#f87171', 'สาธารณูปโภค': '#34d399', 'บัตรเครดิต': '#f472b6', 'อื่นๆ': '#94a3b8' };
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+function fmtMonth(m) {
+  const [y, mo] = m.split('-').map(Number);
+  return `${THAI_MONTHS_ABBR[mo - 1]} ${y + 543}`;
+}
+
+function prevMonthOf(m) {
+  const [y, mo] = m.split('-').map(Number);
+  const d = new Date(y, mo - 2, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// Income/expense totals for a month (transfers excluded — internal moves)
+function monthTotals(month) {
+  const txs = state.transactions.filter(t => t.date.substring(0, 7) === month);
+  const income = txs.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0);
+  const expense = txs.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
+  return { txs, income, expense };
+}
+
+function renderReports() {
+  const sel = document.getElementById('reportMonth');
+  const nowMonth = currentMonthStr();
+  const months = [...new Set(state.transactions.map(t => t.date.substring(0, 7)))];
+  if (!months.includes(nowMonth)) months.push(nowMonth);
+  months.sort().reverse();
+  const cur = sel.value;
+  sel.innerHTML = months.map(m => `<option value="${m}">${fmtMonth(m)}</option>`).join('');
+  sel.value = months.includes(cur) ? cur : months[0];
+  const month = sel.value;
+
+  const { txs, income, expense } = monthTotals(month);
+  const net = income - expense;
+  const saveRate = income > 0 ? Math.round(net / income * 100) : 0;
+
+  // Daily average: elapsed days for current month, full month for past months
+  const [y, mo] = month.split('-').map(Number);
+  const daysInMonth = new Date(y, mo, 0).getDate();
+  const days = month === nowMonth ? new Date().getDate() : daysInMonth;
+  const dailyAvg = Math.round(expense / days);
+  const cardSpent = txs.filter(t => t.type === 'expense' && t.category === 'บัตรเครดิต').reduce((a, t) => a + t.amount, 0);
+
+  document.getElementById('reportStats').innerHTML = `
+    <div class="stat-box"><div class="stat-label">รายรับ</div><div class="stat-value green">+฿ ${fmt(income)}</div></div>
+    <div class="stat-box"><div class="stat-label">รายจ่าย</div><div class="stat-value red">−฿ ${fmt(expense)}</div></div>
+    <div class="stat-box"><div class="stat-label">คงเหลือสุทธิ</div><div class="stat-value ${net >= 0 ? 'blue' : 'red'}">${net < 0 ? '−' : ''}฿ ${fmt(Math.abs(net))}</div></div>
+    <div class="stat-box"><div class="stat-label">อัตราการออม</div><div class="stat-value ${saveRate >= 20 ? 'green' : saveRate >= 0 ? 'yellow' : 'red'}">${saveRate}%</div><div class="stat-sub">เป้าแนะนำ ≥ 20%</div></div>
+    <div class="stat-box"><div class="stat-label">เฉลี่ยจ่าย/วัน</div><div class="stat-value yellow">฿ ${fmt(dailyAvg)}</div><div class="stat-sub">จาก ${days} วัน</div></div>
+    <div class="stat-box"><div class="stat-label">จำนวนรายการ</div><div class="stat-value purple">${txs.length}</div><div class="stat-sub">รายการในเดือนนี้</div></div>
+    <div class="stat-box"><div class="stat-label">ตัดบัตรเครดิต</div><div class="stat-value ${cardSpent > state.cardBudget ? 'red' : 'teal'}">฿ ${fmt(cardSpent)}</div><div class="stat-sub">งบ ฿ ${fmt(state.cardBudget)}/เดือน${cardSpent > state.cardBudget ? ' · เกินงบ!' : ''}</div></div>
+  `;
+
+  // Expense breakdown by category
+  const byCat = {};
+  for (const t of txs) if (t.type === 'expense') byCat[t.category] = (byCat[t.category] || 0) + t.amount;
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  let catHtml = '';
+  for (const [cat, amt] of cats) {
+    const pct = expense > 0 ? Math.round(amt / expense * 100) : 0;
+    const color = CAT_COLORS[cat] || '#94a3b8';
+    catHtml += `<div class="chart-bar">
+      <div class="chart-bar-label">${esc(cat)}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.max(pct, 3)}%;background:${color}">${pct}%</div></div>
+      <div class="chart-bar-amount"><span style="opacity:0.7">฿</span> ${fmt(amt)}</div>
+    </div>`;
+  }
+  document.getElementById('reportCatBars').innerHTML = catHtml || '<p style="text-align:center;color:var(--text-3);padding:20px;font-size:13px">ไม่มีรายจ่ายในเดือนนี้</p>';
+
+  // Compare with previous month
+  const pm = prevMonthOf(month);
+  const prev = monthTotals(pm);
+  const rows = [
+    { label: 'รายรับ', cur: income, prev: prev.income, goodUp: true },
+    { label: 'รายจ่าย', cur: expense, prev: prev.expense, goodUp: false },
+    { label: 'คงเหลือสุทธิ', cur: net, prev: prev.income - prev.expense, goodUp: true }
+  ];
+  let cmpHtml = `<div class="summary-row"><span class="label"></span><span class="value" style="font-size:11px;color:var(--text-3)">${fmtMonth(pm)} → ${fmtMonth(month)}</span></div>`;
+  for (const r of rows) {
+    const diff = r.cur - r.prev;
+    const pct = r.prev !== 0 ? Math.round(Math.abs(diff) / Math.abs(r.prev) * 100) : null;
+    const good = diff === 0 ? null : (diff > 0) === r.goodUp;
+    const color = good === null ? 'var(--text-2)' : good ? 'var(--green)' : 'var(--red)';
+    const arrow = diff === 0 ? '•' : diff > 0 ? '▲' : '▼';
+    cmpHtml += `<div class="summary-row">
+      <span class="label">${r.label}</span>
+      <span class="value">฿ ${fmt(r.prev)} → ฿ ${fmt(r.cur)} <span style="color:${color};font-size:11px;margin-left:4px">${arrow} ${pct === null ? '—' : pct + '%'}</span></span>
+    </div>`;
+  }
+  document.getElementById('reportCompare').innerHTML = cmpHtml;
+
+  // Top 5 expenses
+  const top = txs.filter(t => t.type === 'expense').sort((a, b) => b.amount - a.amount).slice(0, 5);
+  let topHtml = '';
+  for (const t of top) {
+    topHtml += `<tr>
+      <td style="white-space:nowrap">${fmtDate(t.date)}</td>
+      <td>${esc(t.desc || '-')}</td>
+      <td>${esc(t.category)}</td>
+      <td style="text-align:right;font-weight:600;white-space:nowrap" class="red num">−฿ ${fmt(t.amount)}</td>
+    </tr>`;
+  }
+  document.getElementById('reportTopExpense').innerHTML = topHtml || '<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:24px">ไม่มีรายจ่าย</td></tr>';
+
+  // 6-month trend ending at selected month
+  const trendMonths = [];
+  let tm = month;
+  for (let i = 0; i < 6; i++) { trendMonths.unshift(tm); tm = prevMonthOf(tm); }
+  const totals = trendMonths.map(m => ({ m, ...monthTotals(m) }));
+  const maxVal = Math.max(1, ...totals.map(t => Math.max(t.income, t.expense)));
+  let trendHtml = '';
+  for (const t of totals) {
+    const hi = Math.round(t.income / maxVal * 100);
+    const he = Math.round(t.expense / maxVal * 100);
+    trendHtml += `<div class="trend-col">
+      <div class="trend-bars">
+        <div class="trend-bar" style="height:${Math.max(hi, 2)}%;background:var(--green)" title="รายรับ ฿${fmt(t.income)}"></div>
+        <div class="trend-bar" style="height:${Math.max(he, 2)}%;background:var(--red)" title="รายจ่าย ฿${fmt(t.expense)}"></div>
+      </div>
+      <div class="trend-label">${THAI_MONTHS_ABBR[Number(t.m.split('-')[1]) - 1]}</div>
+    </div>`;
+  }
+  document.getElementById('reportTrend').innerHTML = trendHtml;
 }
 
 function addTransaction() {
@@ -771,43 +1295,42 @@ function addTransaction() {
 
   if (!date || !amount) { alert('กรุณากรอกวันที่และจำนวนเงิน'); return; }
 
-  const tx = { date, account, type, amount, desc, category, id: Date.now() };
-  state.transactions.push(tx);
-
-  if (type === 'income') {
-    state.balances[account] += amount;
-  } else if (type === 'expense') {
-    state.balances[account] -= amount;
-  } else if (type === 'transfer' && category) {
-    state.balances[account] -= amount;
-    state.balances[category] += amount;
+  if (type === 'transfer') {
+    if (!category) { alert('กรุณาเลือกบัญชีปลายทาง'); return; }
+    if (category === account) { alert('บัญชีต้นทางและปลายทางต้องไม่ใช่บัญชีเดียวกัน'); return; }
   }
+
+  if (type === 'expense' || type === 'transfer') {
+    const bal = state.balances[account];
+    if (amount > bal && !confirm(`ยอดคงเหลือ "${ACCOUNTS[account].name}" มี ฿ ${fmt(bal)} ไม่พอสำหรับรายการนี้ (฿ ${fmt(amount)})\nบันทึกแล้วยอดจะติดลบ — ยืนยันหรือไม่?`)) return;
+  }
+
+  const tx = { date, account, type, amount, desc, category, id: Date.now() };
+  if (type === 'transfer') tx.dest = category;
+  state.transactions.push(tx);
+  applyTxBalances(tx, 1);
 
   save(); render();
   document.getElementById('txAmount').value = '';
   document.getElementById('txDesc').value = '';
+  txAccountTouched = false;
 }
 
 function deleteTx(idx) {
   if (!confirm('ลบรายการนี้?')) return;
   const tx = state.transactions[idx];
-  if (tx.type === 'income') state.balances[tx.account] -= tx.amount;
-  else if (tx.type === 'expense') state.balances[tx.account] += tx.amount;
-  else if (tx.type === 'transfer' && tx.category) {
-    state.balances[tx.account] += tx.amount;
-    state.balances[tx.category] -= tx.amount;
-  }
+  applyTxBalances(tx, -1);
   state.transactions.splice(idx, 1);
   save(); render();
 }
 
-function saveSalary() {
-  state.salary = parseFloat(document.getElementById('salaryInput').value) || 0;
-  save(); render(); renderSettings();
-  alert('บันทึกเงินเดือนเรียบร้อย: ฿ ' + fmt(state.salary));
+function openGoalModal() {
+  // Default the goal to a savings account (the account list intentionally shows all)
+  const sel = document.getElementById('goalAccount');
+  const savingIds = Object.keys(ACCOUNTS).filter(isSaving);
+  if (savingIds.length && !savingIds.includes(sel.value)) sel.value = savingIds[0];
+  document.getElementById('goalModal').style.display = 'flex';
 }
-
-function openGoalModal() { document.getElementById('goalModal').style.display = 'flex'; }
 function closeGoalModal() { document.getElementById('goalModal').style.display = 'none'; }
 
 function saveGoal() {
@@ -839,7 +1362,7 @@ function exportData() {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'vee-money-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.download = 'vee-money-backup-' + localISODate() + '.json';
   a.click();
 }
 
@@ -849,21 +1372,49 @@ function importData(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      state = JSON.parse(e.target.result);
-      save(); render();
+      // Validate + migrate BEFORE replacing live state — a bad file changes nothing
+      const imported = migrateState(JSON.parse(e.target.result));
+      state = imported;
+      applyAccountsMeta();
+      refreshAccountSelects();
+      save(); render(); renderSettings();
       alert('Import สำเร็จ!');
-    } catch { alert('ไฟล์ไม่ถูกต้อง'); }
+    } catch { alert('ไฟล์ไม่ถูกต้อง — ข้อมูลเดิมไม่ถูกแก้ไข'); }
   };
   reader.readAsText(file);
+  event.target.value = '';
 }
 
-document.getElementById('txType').addEventListener('change', function() {
-  const isTransfer = this.value === 'transfer';
-  document.getElementById('txCategory').style.display = isTransfer ? '' : 'none';
-  document.getElementById('txCatNormal').style.display = isTransfer ? 'none' : '';
-});
+// Categories filtered by transaction type — mixing income/expense categories caused
+// expenses to default to "เงินเดือน" and skew the category report
+const CATS_BY_TYPE = {
+  income: [['เงินเดือน', 'เงินเดือน'], ['บำนาญ', 'บำนาญ'], ['โอนรับ', 'โอนรับจากคนอื่น'], ['อื่นๆ', 'อื่นๆ']],
+  expense: [['อาหาร', 'อาหาร'], ['เดินทาง', 'เดินทาง'], ['ของใช้', 'ของใช้'], ['บันเทิง', 'บันเทิง'], ['ค่าเช่า/ผ่อน', 'ค่าเช่า/ผ่อน'], ['สาธารณูปโภค', 'สาธารณูปโภค'], ['บัตรเครดิต', 'บัตรเครดิต'], ['อื่นๆ', 'อื่นๆ']]
+};
+const DEFAULT_ACCOUNT = { income: 'kbank1', expense: 'kbank1' };
 
-document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+function updateTxTypeUI(changeAccount) {
+  const type = document.getElementById('txType').value;
+  const isTransfer = type === 'transfer';
+  document.getElementById('txCategory').style.display = isTransfer ? '' : 'none';
+  const catSel = document.getElementById('txCatNormal');
+  catSel.style.display = isTransfer ? 'none' : '';
+  if (!isTransfer) {
+    catSel.innerHTML = CATS_BY_TYPE[type].map(([v, label]) => `<option value="${v}">${label}</option>`).join('');
+  }
+  // Auto-default the account only while the user (or OCR) hasn't explicitly picked one
+  if (changeAccount && !txAccountTouched && DEFAULT_ACCOUNT[type]) {
+    document.getElementById('txAccount').value = DEFAULT_ACCOUNT[type];
+  }
+}
+
+let txAccountTouched = false;
+document.getElementById('txAccount').addEventListener('change', () => { txAccountTouched = true; });
+document.getElementById('txType').addEventListener('change', () => updateTxTypeUI(true));
+refreshAccountSelects();
+updateTxTypeUI(false);
+
+document.getElementById('txDate').value = localISODate();
 
 // ============ OCR Slip Reading ============
 let ocrData = { amount: null, date: null, bank: null, note: '' };
@@ -1138,7 +1689,7 @@ function parseSlipText(text) {
   amountInput.value = ocrData.amount || '';
   amountInput.style.borderColor = ocrData.amount ? 'rgba(52,211,153,0.4)' : 'rgba(251,191,36,0.4)';
 
-  dateInput.value = ocrData.date || new Date().toISOString().split('T')[0];
+  dateInput.value = ocrData.date || localISODate();
   dateInput.style.borderColor = ocrData.date ? 'rgba(52,211,153,0.4)' : 'rgba(251,191,36,0.4)';
 
   bankSpan.textContent = ocrData.bank ? ocrData.bank.label : 'ไม่พบ (เลือกบัญชีเอง)';
@@ -1177,7 +1728,7 @@ function applyOcrToForm() {
   if (ocrData.bank) {
     const bankMap = { kbank: 'kbank2', ktb: 'ktb1', promptpay: 'kbank1' };
     const mapped = bankMap[ocrData.bank.bank];
-    if (mapped) document.getElementById('txAccount').value = mapped;
+    if (mapped) { document.getElementById('txAccount').value = mapped; txAccountTouched = true; }
   }
 
   document.querySelector('#tab-transactions .card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
