@@ -763,6 +763,16 @@ function currentMonthStr() { return localISODate().substring(0, 7); }
 // txDest() is the single decode point (new records also carry an explicit `dest`)
 function txDest(t) { return t.type === 'transfer' ? (t.dest || t.category || null) : null; }
 
+// Record a new transaction: the ONLY entry point for creating transactions
+function recordTx(tx) { state.transactions.push(tx); applyTxBalances(tx, 1); }
+
+// Shared low-balance confirmation — one wording, one threshold, every flow
+function confirmSufficientBalance(accountId, amount, label) {
+  const bal = state.balances[accountId];
+  if (amount <= bal) return true;
+  return confirm(`ยอดคงเหลือ "${ACCOUNTS[accountId].name}" มี ฿ ${fmt(bal)} ไม่พอสำหรับ${label} (฿ ${fmt(amount)})\nบันทึกแล้วยอดจะติดลบ — ยืนยันหรือไม่?`);
+}
+
 // Apply (dir = +1) or revert (dir = -1) a transaction's effect on balances —
 // the ONLY place balance math lives; add/delete/plan all go through here
 function applyTxBalances(tx, dir) {
@@ -845,17 +855,14 @@ function planOccurredThisMonth(item, monthStr) {
 
 // Create the transaction + move balances for one plan item (no save/render)
 function applyPlanItem(item, date) {
-  if ((item.type === 'expense' || item.type === 'transfer') && item.amount > state.balances[item.account]) {
-    if (!confirm(`ยอดคงเหลือ "${ACCOUNTS[item.account].name}" มี ฿ ${fmt(state.balances[item.account])} ไม่พอสำหรับ "${item.desc}" (฿ ${fmt(item.amount)})\nบันทึกแล้วยอดจะติดลบ — ยืนยันหรือไม่?`)) return false;
-  }
+  if ((item.type === 'expense' || item.type === 'transfer') && !confirmSufficientBalance(item.account, item.amount, `"${item.desc}"`)) return false;
   const tx = {
     date, account: item.account, type: item.type, amount: item.amount, desc: item.desc,
     category: item.type === 'transfer' ? item.dest : item.category,
     id: Date.now() + Math.floor(Math.random() * 1000), planId: item.id
   };
   if (item.type === 'transfer') tx.dest = item.dest;
-  state.transactions.push(tx);
-  applyTxBalances(tx, 1);
+  recordTx(tx);
   return true;
 }
 
@@ -1223,7 +1230,7 @@ function saveAccountsMeta() {
 
 // ============ Monthly Reports ============
 const THAI_MONTHS_ABBR = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-const CAT_COLORS = { 'อาหาร': '#fbbf24', 'เดินทาง': '#60a5fa', 'ของใช้': '#2dd4bf', 'บันเทิง': '#a78bfa', 'ค่าเช่า/ผ่อน': '#f87171', 'สาธารณูปโภค': '#34d399', 'บัตรเครดิต': '#f472b6', 'ปรับยอด': '#94a3b8', 'อื่นๆ': '#94a3b8' };
+const CAT_COLORS = { 'อาหาร': '#fbbf24', 'เดินทาง': '#60a5fa', 'ของใช้': '#2dd4bf', 'บันเทิง': '#a78bfa', 'ค่าเช่า/ผ่อน': '#f87171', 'สาธารณูปโภค': '#34d399', 'บัตรเครดิต': '#f472b6', 'ปรับยอด': '#64748b', 'อื่นๆ': '#94a3b8' };
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
@@ -1359,14 +1366,18 @@ function renderCardKTC() {
   const monthStr = currentMonthStr();
   const swipedMonth = state.cardSwipes.filter(s => s.date.substring(0, 7) === monthStr).reduce((a, s) => a + s.amount, 0);
   const pending = state.cardSwipes.filter(s => !s.settled);
-  const pendingSum = pending.reduce((a, s) => a + s.amount, 0);
+  const pendingSum = pendingCardSum();
+  // Actual bill payments this month — the budget signal for users who don't log swipes
+  const paidMonth = state.transactions.filter(t => t.type === 'expense' && t.category === 'บัตรเครดิต' && t.date.substring(0, 7) === monthStr).reduce((a, t) => a + t.amount, 0);
   const budget = state.cardBudget;
-  const pct = budget > 0 ? Math.min(100, Math.round(swipedMonth / budget * 100)) : 0;
-  const over = swipedMonth > budget;
+  const usedMonth = Math.max(swipedMonth, paidMonth);
+  const pct = budget > 0 ? Math.min(100, Math.round(usedMonth / budget * 100)) : 0;
+  const over = usedMonth > budget;
   let html = `
     <div class="summary-row"><span class="label">รูดสะสมเดือนนี้ (งบ ฿ ${fmt(budget)})</span><span class="value" style="color:${over ? 'var(--red)' : 'var(--teal)'}">฿ ${fmt(swipedMonth)}${over ? ' · เกินงบ!' : ''}</span></div>
     <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${over ? 'var(--red)' : 'var(--teal)'};color:${over ? 'var(--red)' : 'var(--teal)'}"></div></div>
-    <div class="summary-row" style="margin-top:8px"><span class="label">ยอดค้างชำระ${pending.length ? ` (${pending.length} รายการ)` : ''}</span><span class="value yellow">฿ ${fmt(pendingSum)}</span></div>`;
+    <div class="summary-row" style="margin-top:8px"><span class="label">จ่ายบิลแล้วเดือนนี้</span><span class="value" style="color:${paidMonth > budget ? 'var(--red)' : 'var(--text-2)'}">฿ ${fmt(paidMonth)}</span></div>
+    <div class="summary-row"><span class="label">ยอดค้างชำระ${pending.length ? ` (${pending.length} รายการ)` : ''}</span><span class="value yellow">฿ ${fmt(pendingSum)}</span></div>`;
   for (const s of [...pending].reverse().slice(0, 3)) {
     html += `<div class="summary-row" style="font-size:12px">
       <span class="label">${fmtDate(s.date)} · ${esc(s.desc || 'รูดบัตร')}</span>
@@ -1375,6 +1386,11 @@ function renderCardKTC() {
   }
   if (pending.length > 3) html += `<p style="font-size:10px;color:var(--text-3);text-align:right;margin-top:4px">และอีก ${pending.length - 3} รายการ</p>`;
   el.innerHTML = html;
+}
+
+// Unsettled card liability, rounded to satang (shared by the card and the pay modal)
+function pendingCardSum() {
+  return Math.round(state.cardSwipes.filter(s => !s.settled).reduce((a, s) => a + s.amount, 0) * 100) / 100;
 }
 
 function openSwipeModal() {
@@ -1401,7 +1417,7 @@ function deleteSwipe(id) {
 }
 
 function openCardPayModal() {
-  const pendingSum = state.cardSwipes.filter(s => !s.settled).reduce((a, s) => a + s.amount, 0);
+  const pendingSum = pendingCardSum();
   document.getElementById('cardPayAmount').value = pendingSum || '';
   document.getElementById('cardPayDate').value = localISODate();
   document.getElementById('cardPayPendingInfo').textContent = pendingSum > 0
@@ -1415,12 +1431,19 @@ function payCardBill() {
   const amount = parseFloat(document.getElementById('cardPayAmount').value) || 0;
   if (amount <= 0) { alert('กรุณากรอกยอดบิล'); return; }
   const date = document.getElementById('cardPayDate').value || localISODate();
-  if (amount > state.balances.ktb1 && !confirm(`ยอดคงเหลือ "${ACCOUNTS.ktb1.name}" มี ฿ ${fmt(state.balances.ktb1)} ไม่พอสำหรับบิล ฿ ${fmt(amount)}\nบันทึกแล้วยอดจะติดลบ — ยืนยันหรือไม่?`)) return;
-  const t1 = { date, account: 'ktb1', type: 'transfer', amount, desc: 'ย้ายเงินจ่ายบิลบัตร KTC', category: 'ktb2', dest: 'ktb2', id: Date.now() };
-  const t2 = { date, account: 'ktb2', type: 'expense', amount, desc: 'ชำระบัตร KTC', category: 'บัตรเครดิต', id: Date.now() + 1 };
-  state.transactions.push(t1); applyTxBalances(t1, 1);
-  state.transactions.push(t2); applyTxBalances(t2, 1);
-  for (const s of state.cardSwipes) if (!s.settled) { s.settled = true; s.settledDate = date; }
+  if (!confirmSufficientBalance('ktb1', amount, 'บิลบัตร KTC')) return;
+  recordTx({ date, account: 'ktb1', type: 'transfer', amount, desc: 'ย้ายเงินจ่ายบิลบัตร KTC', category: 'ktb2', dest: 'ktb2', id: Date.now() });
+  recordTx({ date, account: 'ktb2', type: 'expense', amount, desc: 'ชำระบัตร KTC', category: 'บัตรเครดิต', id: Date.now() + 1 });
+  // Settle pending swipes oldest-first, only up to the amount actually paid —
+  // a partial payment leaves the uncovered swipes still tracked as owed
+  let remaining = amount + 0.005;
+  for (const s of state.cardSwipes) {
+    if (s.settled) continue;
+    if (s.amount > remaining) break;
+    s.settled = true;
+    s.settledDate = date;
+    remaining -= s.amount;
+  }
   save(); render(); closeCardPayModal();
   alert(`จ่ายบิลบัตร KTC ฿ ${fmt(amount)} เรียบร้อย — สร้างรายการโอน + รายจ่ายให้แล้ว`);
 }
@@ -1450,13 +1473,11 @@ function applyAdjustments() {
     const id = inp.dataset.adjust;
     const diff = (parseFloat(inp.value) || 0) - state.balances[id];
     if (Math.abs(diff) < 0.005) return;
-    const tx = {
+    recordTx({
       date: localISODate(), account: id, type: diff > 0 ? 'income' : 'expense',
       amount: Math.abs(diff), desc: 'ปรับยอดให้ตรงธนาคาร', category: 'ปรับยอด',
       id: Date.now() + count
-    };
-    state.transactions.push(tx);
-    applyTxBalances(tx, 1);
+    });
     count++;
   });
   if (!count) { alert('ไม่มีบัญชีที่ต้องปรับ — ยอดตรงอยู่แล้วหรือยังไม่ได้กรอก'); return; }
@@ -1470,6 +1491,7 @@ async function toggleNotify(on) {
   if (on) {
     if (!('Notification' in window)) { alert('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน'); box.checked = false; return; }
     const perm = await Notification.requestPermission();
+    if (box.checked !== on) return; // user changed their mind while the permission prompt was open
     if (perm !== 'granted') { alert('ไม่ได้รับสิทธิ์แจ้งเตือนจากเบราว์เซอร์'); box.checked = false; return; }
   }
   state.notifyEnabled = on;
@@ -1486,12 +1508,16 @@ function checkPlanNotifications(force) {
   if (!due.length) return;
   const title = `VeeMoney — ${due.length} รายการตามแผนรอบันทึก`;
   const opts = { body: due.map(p => `${p.desc} ฿${fmt(p.amount)}`).join(' · '), icon: './icon-192.png', badge: './icon-192.png' };
-  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.ready.then(reg => reg.showNotification(title, opts)).catch(() => { try { new Notification(title, opts); } catch {} });
+  // Mark the daily dedup ONLY after a notification actually shows — a silent
+  // failure (e.g. page-context Notification throws on Android Chrome) must not
+  // suppress retries for the rest of the day
+  const mark = () => localStorage.setItem('vee_notified', today);
+  const fallback = () => { try { new Notification(title, opts); mark(); } catch {} };
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(reg => reg.showNotification(title, opts)).then(mark).catch(fallback);
   } else {
-    try { new Notification(title, opts); } catch {}
+    fallback();
   }
-  localStorage.setItem('vee_notified', today);
 }
 
 // ============ Savings-vs-target line chart (reports) ============
@@ -1507,11 +1533,15 @@ function renderSavingsChart(year) {
   const cum = [0];
   for (let m = 1; m <= 12; m++) cum[m] = cum[m - 1] + monthly[m];
   const now = new Date();
-  const lastM = Number(year) === now.getFullYear() ? now.getMonth() + 1 : (Number(year) < now.getFullYear() ? 12 : 0);
+  // Current year: plot up to this month; past AND future years: plot all 12
+  // (future months can hold post-dated transactions)
+  const lastM = Number(year) === now.getFullYear() ? now.getMonth() + 1 : 12;
   const { min, max } = state.yearGoal;
-  const maxY = Math.max(max, ...cum.slice(0, lastM + 1), 1);
+  const seen = cum.slice(0, lastM + 1);
+  const hi = Math.max(max, ...seen, 1);
+  const lo = Math.min(0, ...seen); // extend the domain when cumulative savings go negative
   const X = m => 24 + m * (556 / 12);
-  const Y = v => 182 - (v / maxY) * 162;
+  const Y = v => 182 - ((v - lo) / (hi - lo)) * 162;
   const pts = [];
   for (let m = 0; m <= lastM; m++) pts.push(`${X(m).toFixed(1)},${Y(cum[m]).toFixed(1)}`);
   let dots = '';
@@ -1548,15 +1578,11 @@ function addTransaction() {
     if (category === account) { alert('บัญชีต้นทางและปลายทางต้องไม่ใช่บัญชีเดียวกัน'); return; }
   }
 
-  if (type === 'expense' || type === 'transfer') {
-    const bal = state.balances[account];
-    if (amount > bal && !confirm(`ยอดคงเหลือ "${ACCOUNTS[account].name}" มี ฿ ${fmt(bal)} ไม่พอสำหรับรายการนี้ (฿ ${fmt(amount)})\nบันทึกแล้วยอดจะติดลบ — ยืนยันหรือไม่?`)) return;
-  }
+  if ((type === 'expense' || type === 'transfer') && !confirmSufficientBalance(account, amount, 'รายการนี้')) return;
 
   const tx = { date, account, type, amount, desc, category, id: Date.now() };
   if (type === 'transfer') tx.dest = category;
-  state.transactions.push(tx);
-  applyTxBalances(tx, 1);
+  recordTx(tx);
 
   save(); render();
   document.getElementById('txAmount').value = '';
