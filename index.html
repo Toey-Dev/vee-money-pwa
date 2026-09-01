@@ -328,7 +328,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 <div class="container">
 <div class="header">
   <h1>Vee Money Dashboard</h1>
-  <p class="subtitle">ระบบจัดการเงิน 4 บัญชี · กสิกรไทย + กรุงไทย</p>
+  <p class="subtitle" id="subtitle"></p>
 </div>
 
 <div class="grid-4" id="accountCards"></div>
@@ -843,6 +843,7 @@ function switchTab(tab, ev) {
 }
 
 function render() {
+  renderSubtitle();
   renderAccounts();
   renderPlan();
   renderBars();
@@ -852,6 +853,13 @@ function render() {
   renderTransactions();
   renderGoals();
   renderMonthFilter();
+}
+
+// Derived from ACCOUNTS so adding a bank can't leave a stale count behind
+function renderSubtitle() {
+  const banks = [...new Set(Object.values(ACCOUNTS).map(a => a.bank))];
+  document.getElementById('subtitle').textContent =
+    `ระบบจัดการเงิน ${Object.keys(ACCOUNTS).length} บัญชี · ${banks.join(' + ')}`;
 }
 
 function renderAccounts() {

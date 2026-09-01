@@ -1,7 +1,7 @@
 {
   "name": "Vee Money Dashboard",
   "short_name": "VeeMoney",
-  "description": "ระบบจัดการเงิน 4 บัญชี | กสิกรไทย + กรุงไทย",
+  "description": "ระบบจัดการเงิน 5 บัญชี | กสิกรไทย + กรุงไทย + ไทยเครดิต",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0e1a",
