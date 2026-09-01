@@ -876,14 +876,13 @@ function renderTxSummary() {
   if (!el) return;
   const month = currentMonthStr();
   document.getElementById('txSummaryMonth').textContent = fmtMonth(month);
-  const txs = state.transactions.filter(t => t.date.substring(0, 7) === month);
-  const spent = txs.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
-  const saved = savedInMonth(month);
-  const left = state.balances[MAIN_SPEND_ACCOUNT];
+  const expenses = state.transactions.filter(t => t.date.substring(0, 7) === month && t.type === 'expense');
+  const spent = expenses.reduce((a, t) => a + t.amount, 0);
+  const { saved, spend } = monthSplit(month);
   el.innerHTML = `
-    <div class="stat-box"><div class="stat-label">ค่าใช้จ่ายเดือนนี้</div><div class="stat-value red">−฿ ${fmt(spent)}</div><div class="stat-sub">${txs.filter(t => t.type === 'expense').length} รายการ</div></div>
+    <div class="stat-box"><div class="stat-label">ค่าใช้จ่ายเดือนนี้</div><div class="stat-value red">−฿ ${fmt(spent)}</div><div class="stat-sub">${expenses.length} รายการ</div></div>
     <div class="stat-box"><div class="stat-label">ออมได้เดือนนี้</div><div class="stat-value ${saved >= 0 ? 'green' : 'red'}">${saved < 0 ? '−' : '+'}฿ ${fmt(Math.abs(saved))}</div><div class="stat-sub">เข้าบัญชีเงินออม</div></div>
-    <div class="stat-box"><div class="stat-label">เหลือใช้</div><div class="stat-value ${left < 0 ? 'red' : 'blue'}">฿ ${fmt(left)}</div><div class="stat-sub">${esc(accOf(MAIN_SPEND_ACCOUNT).short)}</div></div>
+    <div class="stat-box"><div class="stat-label">เหลือใช้เดือนนี้</div><div class="stat-value ${spend < 0 ? 'red' : 'blue'}">${spend < 0 ? '−' : ''}฿ ${fmt(Math.abs(spend))}</div><div class="stat-sub">${esc(accOf(MAIN_SPEND_ACCOUNT).short)} · เฉพาะเดือนนี้</div></div>
   `;
 }
 
@@ -1021,12 +1020,12 @@ function savedInMonth(month) {
 // The day-to-day account salary lands in and spending comes out of
 const MAIN_SPEND_ACCOUNT = 'kbank1';
 
-// Closing balance of an account for a given month — needed because a month's
-// leftover carries into the next one, which income−expense alone cannot show
-function balanceAtEndOf(accountId, month) {
+// How much an account moved during ONE month. Every monthly figure in the app is
+// scoped this way: no balance is ever carried in from an earlier month.
+function monthNetFlow(accountId, month) {
   let b = 0;
   for (const t of state.transactions) {
-    if (t.date.substring(0, 7) > month) continue;
+    if (t.date.substring(0, 7) !== month) continue;
     if (t.type === 'income' && t.account === accountId) b += t.amount;
     else if (t.type === 'expense' && t.account === accountId) b -= t.amount;
     else if (t.type === 'transfer') {
@@ -1035,6 +1034,16 @@ function balanceAtEndOf(accountId, month) {
     }
   }
   return b;
+}
+
+// "net kept this month" split by where it ended up; `other` catches money parked
+// in accounts that are neither savings nor the spending account
+function monthSplit(month) {
+  const { income, expense } = monthTotals(month);
+  const net = income - expense;
+  const saved = savedInMonth(month);
+  const spend = monthNetFlow(MAIN_SPEND_ACCOUNT, month);
+  return { net, saved, spend, other: net - saved - spend };
 }
 
 function renderYearGoal() {
@@ -1359,13 +1368,11 @@ function renderReports() {
   const month = sel.value;
 
   const { txs, income, expense } = monthTotals(month);
-  // What the month actually left behind: money moved into savings plus what is
-  // still sitting in the spending account at month end. income−expense alone
-  // misses the balance carried in from the previous month.
-  const savedMonth = savedInMonth(month);
-  const leftInSpend = balanceAtEndOf(MAIN_SPEND_ACCOUNT, month);
-  const net = savedMonth + leftInSpend;
+  // Everything here is scoped to the selected month only — nothing carries over
+  const { net, saved: savedMonth, spend: leftInSpend, other: parkedElsewhere } = monthSplit(month);
   const saveRate = income > 0 ? Math.round(net / income * 100) : 0;
+  const netParts = [`ออม ${fmt(savedMonth)}`, `เหลือใช้ ${fmt(leftInSpend)}`];
+  if (Math.abs(parkedElsewhere) >= 1) netParts.push(`บัญชีอื่น ${fmt(parkedElsewhere)}`);
 
   // Daily average: elapsed days for current month, full month for past months
   const [y, mo] = month.split('-').map(Number);
@@ -1378,7 +1385,7 @@ function renderReports() {
     <div class="stat-box"><div class="stat-label">รายรับ</div><div class="stat-value green">+฿ ${fmt(income)}</div></div>
     <div class="stat-box"><div class="stat-label">รายจ่าย</div><div class="stat-value red">−฿ ${fmt(expense)}</div></div>
     <div class="stat-box"><div class="stat-label">ออมได้เดือนนี้</div><div class="stat-value ${savedMonth >= 0 ? 'green' : 'red'}">${savedMonth < 0 ? '−' : '+'}฿ ${fmt(Math.abs(savedMonth))}</div><div class="stat-sub">เข้าบัญชีเงินออม</div></div>
-    <div class="stat-box"><div class="stat-label">คงเหลือสุทธิ</div><div class="stat-value ${net >= 0 ? 'blue' : 'red'}">${net < 0 ? '−' : ''}฿ ${fmt(Math.abs(net))}</div><div class="stat-sub">ออม ${fmt(savedMonth)} + เหลือใช้ ${fmt(leftInSpend)}</div></div>
+    <div class="stat-box"><div class="stat-label">คงเหลือสุทธิ</div><div class="stat-value ${net >= 0 ? 'blue' : 'red'}">${net < 0 ? '−' : ''}฿ ${fmt(Math.abs(net))}</div><div class="stat-sub">${netParts.join(' + ')}</div></div>
     <div class="stat-box"><div class="stat-label">อัตราการออม</div><div class="stat-value ${saveRate >= 20 ? 'green' : saveRate >= 0 ? 'yellow' : 'red'}">${saveRate}%</div><div class="stat-sub">เป้าแนะนำ ≥ 20%</div></div>
     <div class="stat-box"><div class="stat-label">เฉลี่ยจ่าย/วัน</div><div class="stat-value yellow">฿ ${fmt(dailyAvg)}</div><div class="stat-sub">จาก ${days} วัน</div></div>
     <div class="stat-box"><div class="stat-label">จำนวนรายการ</div><div class="stat-value purple">${txs.length}</div><div class="stat-sub">รายการในเดือนนี้</div></div>
