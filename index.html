@@ -691,8 +691,8 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 const ACCOUNTS = {
   kbank1: { name: '', short: 'เงินเดือน+ใช้จ่าย', prefix: 'กสิกร', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'รับเงินเดือน + ใช้จ่ายประจำวัน' },
   kbank2: { name: '', short: 'ซื้อของ/เที่ยว', prefix: 'กสิกร', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'เงินเก็บซื้อของ/ท่องเที่ยว ตามสะดวกแต่ละเดือน' },
-  ktb1:   { name: '', short: 'รับบำนาญ', prefix: 'กรุงไทย', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'รับเงินบำนาญ' },
-  ktb2:   { name: '', short: 'บัตร KTC + พักเงินลงทุน', prefix: 'กรุงไทย', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'พักเงินสำหรับตัดบัตร KTC และเงินลงทุน' },
+  ktb1:   { name: '', short: 'รับบำนาญ + พักเงินลงทุน', prefix: 'กรุงไทย', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'รับเงินบำนาญ + พักเงินลงทุน' },
+  ktb2:   { name: '', short: 'บัตร KTC', prefix: 'กรุงไทย', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'พักเงินสำหรับตัดบัตร KTC' },
   tcr1:   { name: '', short: 'เงินออม', prefix: 'ไทยเครดิต', bank: 'ไทยเครดิต', icon: 'TC', css: 'tcredit', purpose: 'บัญชีเงินออมหลัก' }
 };
 
@@ -722,13 +722,26 @@ function migrateState(s) {
   if (!s.accountsMeta || typeof s.accountsMeta !== 'object') s.accountsMeta = {};
   if (!Array.isArray(s.cardSwipes)) s.cardSwipes = [];
   if (typeof s.notifyEnabled !== 'boolean') s.notifyEnabled = false;
+
+  // Rev 2 — savings moved to the Thai Credit account: ktb1 takes over investment
+  // parking and stops counting toward the yearly goal, ktb2 goes back to being
+  // card-only, and the recurring savings transfer retargets to tcr1.
+  // schemaRev gates it so a later manual rename is never clobbered.
+  if (!(s.schemaRev >= 2)) {
+    const kt1 = s.accountsMeta.ktb1, kt2 = s.accountsMeta.ktb2;
+    if (kt1) { kt1.short = 'รับบำนาญ + พักเงินลงทุน'; kt1.purpose = 'รับเงินบำนาญ + พักเงินลงทุน'; kt1.saving = false; }
+    if (kt2) { kt2.short = 'บัตร KTC'; kt2.purpose = 'พักเงินสำหรับตัดบัตร KTC'; }
+    for (const p of s.plan) if (p.type === 'transfer' && p.dest === 'ktb1') p.dest = 'tcr1';
+    s.schemaRev = 2;
+  }
   return s;
 }
 migrateState(state);
+try { save(); } catch {} // persist migrations so they apply once, not on every load
 
 // ===== Editable account metadata (name/purpose/saving flag/hidden) =====
 const ACCOUNT_DEFAULTS = JSON.parse(JSON.stringify(ACCOUNTS));
-const DEFAULT_SAVING = { tcr1: true, ktb2: true };
+const DEFAULT_SAVING = { tcr1: true };
 function accMeta(id) { return state.accountsMeta[id] || {}; }
 function isSaving(id) { const m = accMeta(id); return m.saving === undefined ? !!DEFAULT_SAVING[id] : !!m.saving; }
 function isHidden(id) { return !!accMeta(id).hidden; }
