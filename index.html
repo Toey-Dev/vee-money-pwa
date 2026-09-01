@@ -258,6 +258,12 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 .ocr-input.text-left{text-align:left}
 .ocr-hint{font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4}
 
+/* Per-account month rows on the transactions tab */
+.acc-month-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.acc-month-row:last-child{border-bottom:none}
+.acc-month-flow{font-size:10px;color:var(--text-3);margin-top:3px}
+.acc-month-net{font-family:'Inter','Sarabun',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;white-space:nowrap}
+
 /* Report stats */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .stat-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
@@ -383,6 +389,9 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
   <div class="card">
     <div class="section-title">เดือนนี้ <span class="badge badge-blue" id="txSummaryMonth"></span></div>
     <div class="stat-grid" id="txSummary"></div>
+    <div class="divider" style="margin:16px 0 6px"></div>
+    <div style="font-size:12px;color:var(--text-2);font-weight:600;margin-bottom:4px">แยกตามบัญชี · เฉพาะเดือนนี้</div>
+    <div id="txByAccount"></div>
   </div>
   <div class="card">
     <div class="section-title">สแกนสลิป <span class="badge badge-blue">OCR</span></div>
@@ -884,6 +893,23 @@ function renderTxSummary() {
     <div class="stat-box"><div class="stat-label">ออมได้เดือนนี้</div><div class="stat-value ${saved >= 0 ? 'green' : 'red'}">${saved < 0 ? '−' : '+'}฿ ${fmt(Math.abs(saved))}</div><div class="stat-sub">เข้าบัญชีเงินออม</div></div>
     <div class="stat-box"><div class="stat-label">เหลือใช้เดือนนี้</div><div class="stat-value ${spend < 0 ? 'red' : 'blue'}">${spend < 0 ? '−' : ''}฿ ${fmt(Math.abs(spend))}</div><div class="stat-sub">${esc(accOf(MAIN_SPEND_ACCOUNT).short)} · เฉพาะเดือนนี้</div></div>
   `;
+
+  // Every account is listed even with no activity, so the layout stays stable
+  let rows = '';
+  for (const [id, acc] of Object.entries(ACCOUNTS)) {
+    if (isHidden(id)) continue;
+    const { into, out, net } = monthAccountFlow(id, month);
+    const color = net > 0 ? 'var(--green)' : net < 0 ? 'var(--red)' : 'var(--text-3)';
+    const sign = net > 0 ? '+' : net < 0 ? '−' : '';
+    rows += `<div class="acc-month-row">
+      <div style="min-width:0">
+        <div style="font-size:13px">${accCell(acc)}</div>
+        <div class="acc-month-flow">${into || out ? `เข้า ฿ ${fmt(into)} · ออก ฿ ${fmt(out)}` : 'ไม่มีรายการเดือนนี้'}</div>
+      </div>
+      <div class="acc-month-net" style="color:${color}">${sign}฿ ${fmt(Math.abs(net))}</div>
+    </div>`;
+  }
+  document.getElementById('txByAccount').innerHTML = rows;
 }
 
 function renderAccounts() {
@@ -1020,21 +1046,23 @@ function savedInMonth(month) {
 // The day-to-day account salary lands in and spending comes out of
 const MAIN_SPEND_ACCOUNT = 'kbank1';
 
-// How much an account moved during ONE month. Every monthly figure in the app is
-// scoped this way: no balance is ever carried in from an earlier month.
-function monthNetFlow(accountId, month) {
-  let b = 0;
+// Money in and out of one account during ONE month. Every monthly figure in the
+// app is scoped this way: no balance is ever carried in from an earlier month.
+function monthAccountFlow(accountId, month) {
+  let into = 0, out = 0;
   for (const t of state.transactions) {
     if (t.date.substring(0, 7) !== month) continue;
-    if (t.type === 'income' && t.account === accountId) b += t.amount;
-    else if (t.type === 'expense' && t.account === accountId) b -= t.amount;
+    if (t.type === 'income' && t.account === accountId) into += t.amount;
+    else if (t.type === 'expense' && t.account === accountId) out += t.amount;
     else if (t.type === 'transfer') {
-      if (t.account === accountId) b -= t.amount;
-      if (txDest(t) === accountId) b += t.amount;
+      if (t.account === accountId) out += t.amount;
+      if (txDest(t) === accountId) into += t.amount;
     }
   }
-  return b;
+  return { into, out, net: into - out };
 }
+
+function monthNetFlow(accountId, month) { return monthAccountFlow(accountId, month).net; }
 
 // "net kept this month" split by where it ended up; `other` catches money parked
 // in accounts that are neither savings nor the spending account
