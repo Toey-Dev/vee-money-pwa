@@ -258,12 +258,6 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 .ocr-input.text-left{text-align:left}
 .ocr-hint{font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4}
 
-/* Per-account month rows on the transactions tab */
-.acc-month-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
-.acc-month-row:last-child{border-bottom:none}
-.acc-month-flow{font-size:10px;color:var(--text-3);margin-top:3px}
-.acc-month-net{font-family:'Inter','Sarabun',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;white-space:nowrap}
-
 /* Report stats */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .stat-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
@@ -294,6 +288,8 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
   .acc-value{margin-top:0;font-size:18px;justify-content:flex-end;text-align:right}
   .acc-value .currency{font-size:13px}
   .acc-pct{display:none}
+  /* the month cards keep their in/out line — it is what tells ฿0 apart from "no activity" */
+  #txSummary .acc-pct{display:block;margin-top:10px}
   .progress-bar{margin-top:12px}
 
   .grid-2{grid-template-columns:1fr;gap:14px}
@@ -386,13 +382,11 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 </div>
 
 <div id="tab-transactions" style="display:none">
-  <div class="card">
-    <div class="section-title">เดือนนี้ <span class="badge badge-blue" id="txSummaryMonth"></span></div>
-    <div class="stat-grid" id="txSummary"></div>
-    <div class="divider" style="margin:16px 0 6px"></div>
-    <div style="font-size:12px;color:var(--text-2);font-weight:600;margin-bottom:4px">แยกตามบัญชี · เฉพาะเดือนนี้</div>
-    <div id="txByAccount"></div>
+  <div style="display:flex;align-items:center;gap:8px;margin:0 4px 12px">
+    <span style="font-size:15px;font-weight:700;letter-spacing:-0.2px">ยอดเดือนนี้</span>
+    <span class="badge badge-blue" id="txSummaryMonth"></span>
   </div>
+  <div class="grid-4" id="txSummary"></div>
   <div class="card">
     <div class="section-title">สแกนสลิป <span class="badge badge-blue">OCR</span></div>
     <div class="slip-zone" id="slipZone">
@@ -880,60 +874,57 @@ function renderSubtitle() {
 
 // The transactions tab answers "this month": what went out, what was saved,
 // and what is still spendable — balances of every account live on the overview
+// One card shape shared by the overview (balances) and the transactions tab
+// (that month's movement), so both pages read the same way
+function accountCardHtml(id, { value, sub, pct, signed }) {
+  const acc = ACCOUNTS[id], color = COLORS[id];
+  const sign = signed && value > 0 ? '+' : signed && value < 0 ? '−' : '';
+  const amount = signed ? fmt(Math.abs(value)) : fmt(value);
+  const dim = signed && value === 0;
+  return `<div class="acc-card" style="--acc-color:${color}">
+    <div class="acc-row">
+      <div class="acc-icon ${acc.css}">${acc.icon}</div>
+      <div class="acc-info">
+        <div class="acc-label">${esc(acc.name)}</div>
+        <div class="acc-purpose">${esc(acc.purpose)}</div>
+      </div>
+      <div class="acc-value" style="color:${dim ? 'var(--text-3)' : color}">${sign}<span class="currency">฿</span>${amount}</div>
+    </div>
+    <div class="acc-pct">${sub}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color};color:${color}"></div></div>
+  </div>`;
+}
+
+function visibleAccountIds() { return Object.keys(ACCOUNTS).filter(id => !isHidden(id)); }
+
+// Transactions tab: same cards, but each one shows what moved during the month.
+// Accounts with no activity stay listed at ฿0 so the layout never shifts.
 function renderTxSummary() {
   const el = document.getElementById('txSummary');
   if (!el) return;
   const month = currentMonthStr();
   document.getElementById('txSummaryMonth').textContent = fmtMonth(month);
-  const expenses = state.transactions.filter(t => t.date.substring(0, 7) === month && t.type === 'expense');
-  const spent = expenses.reduce((a, t) => a + t.amount, 0);
-  const { saved, spend } = monthSplit(month);
-  el.innerHTML = `
-    <div class="stat-box"><div class="stat-label">ค่าใช้จ่ายเดือนนี้</div><div class="stat-value red">−฿ ${fmt(spent)}</div><div class="stat-sub">${expenses.length} รายการ</div></div>
-    <div class="stat-box"><div class="stat-label">ออมได้เดือนนี้</div><div class="stat-value ${saved >= 0 ? 'green' : 'red'}">${saved < 0 ? '−' : '+'}฿ ${fmt(Math.abs(saved))}</div><div class="stat-sub">เข้าบัญชีเงินออม</div></div>
-    <div class="stat-box"><div class="stat-label">เหลือใช้เดือนนี้</div><div class="stat-value ${spend < 0 ? 'red' : 'blue'}">${spend < 0 ? '−' : ''}฿ ${fmt(Math.abs(spend))}</div><div class="stat-sub">${esc(accOf(MAIN_SPEND_ACCOUNT).short)} · เฉพาะเดือนนี้</div></div>
-  `;
-
-  // Every account is listed even with no activity, so the layout stays stable
-  let rows = '';
-  for (const [id, acc] of Object.entries(ACCOUNTS)) {
-    if (isHidden(id)) continue;
-    const { into, out, net } = monthAccountFlow(id, month);
-    const color = net > 0 ? 'var(--green)' : net < 0 ? 'var(--red)' : 'var(--text-3)';
-    const sign = net > 0 ? '+' : net < 0 ? '−' : '';
-    rows += `<div class="acc-month-row">
-      <div style="min-width:0">
-        <div style="font-size:13px">${accCell(acc)}</div>
-        <div class="acc-month-flow">${into || out ? `เข้า ฿ ${fmt(into)} · ออก ฿ ${fmt(out)}` : 'ไม่มีรายการเดือนนี้'}</div>
-      </div>
-      <div class="acc-month-net" style="color:${color}">${sign}฿ ${fmt(Math.abs(net))}</div>
-    </div>`;
-  }
-  document.getElementById('txByAccount').innerHTML = rows;
+  const ids = visibleAccountIds();
+  const flows = Object.fromEntries(ids.map(id => [id, monthAccountFlow(id, month)]));
+  const widest = Math.max(1, ...ids.map(id => Math.abs(flows[id].net)));
+  el.innerHTML = ids.map(id => {
+    const { into, out, net } = flows[id];
+    return accountCardHtml(id, {
+      value: net,
+      signed: true,
+      sub: into || out ? `เข้า ฿ ${fmt(into)} · ออก ฿ ${fmt(out)}` : 'ไม่มีรายการเดือนนี้',
+      pct: Math.round(Math.abs(net) / widest * 100)
+    });
+  }).join('');
 }
 
 function renderAccounts() {
   const total = Object.values(state.balances).reduce((a, b) => a + b, 0);
-  let html = '';
-  for (const [id, acc] of Object.entries(ACCOUNTS)) {
+  document.getElementById('accountCards').innerHTML = visibleAccountIds().map(id => {
     const bal = state.balances[id];
     const pct = total > 0 ? Math.round(bal / total * 100) : 0;
-    const color = COLORS[id];
-    if (isHidden(id)) continue;
-    html += `<div class="acc-card" style="--acc-color:${color}">
-      <div class="acc-row">
-        <div class="acc-icon ${acc.css}">${acc.icon}</div>
-        <div class="acc-info">
-          <div class="acc-label">${esc(acc.name)}</div>
-          <div class="acc-purpose">${esc(acc.purpose)}</div>
-        </div>
-        <div class="acc-value" style="color:${color}"><span class="currency">฿</span>${fmt(bal)}</div>
-      </div>
-      <div class="acc-pct">${pct}% ของยอดรวม</div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color};color:${color}"></div></div>
-    </div>`;
-  }
-  document.getElementById('accountCards').innerHTML = html;
+    return accountCardHtml(id, { value: bal, sub: `${pct}% ของยอดรวม`, pct });
+  }).join('');
 }
 
 // ============ Monthly Plan (recurring items) ============
