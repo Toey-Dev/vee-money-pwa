@@ -100,6 +100,7 @@ h1{font-size:26px;font-weight:800;margin-bottom:6px;color:var(--text);letter-spa
 .acc-icon.kbank{background:linear-gradient(135deg,#00c060 0%,#008f45 100%)}
 .acc-icon.ktb{background:linear-gradient(135deg,#1eb8f5 0%,#0085c2 100%)}
 .acc-icon.tcredit{background:linear-gradient(135deg,#fb7185 0%,#e11d48 100%)}
+.acc-icon.invest{background:linear-gradient(135deg,#22d3ee 0%,#0891b2 100%);font-size:11px;letter-spacing:-0.3px}
 .acc-info{flex:1;min-width:0}
 .acc-label{font-size:13px;color:var(--text-2);font-weight:500;margin-bottom:2px}
 .acc-purpose{font-size:11px;color:var(--text-3);font-weight:500}
@@ -877,12 +878,12 @@ function renderSubtitle() {
 // and what is still spendable — balances of every account live on the overview
 // One card shape shared by the overview (balances) and the transactions tab
 // (that month's movement), so both pages read the same way
-function accountCardHtml(id, { value, sub, pct, signed }) {
-  const acc = ACCOUNTS[id], color = COLORS[id];
+function accountCardHtml(acc, color, { value, sub, pct, signed, dimZero }) {
   const shown = Math.abs(value) < 0.5 ? 0 : value;   // sub-baht residue counts as zero
-  const sign = signed && shown > 0 ? '+' : signed && shown < 0 ? '−' : '';
-  const amount = signed ? fmt(Math.abs(shown)) : fmt(shown);
-  const dim = signed && shown === 0;
+  // the sign always leads, so a negative reads "−฿15,000" and never "฿-15,000"
+  const sign = shown < 0 ? '−' : (signed && shown > 0 ? '+' : '');
+  const amount = fmt(Math.abs(shown));
+  const dim = (signed || dimZero) && shown === 0;
   return `<div class="acc-card" style="--acc-color:${color}">
     <div class="acc-row">
       <div class="acc-icon ${acc.css}">${acc.icon}</div>
@@ -899,6 +900,18 @@ function accountCardHtml(id, { value, sub, pct, signed }) {
 
 function visibleAccountIds() { return Object.keys(ACCOUNTS).filter(id => !isHidden(id)); }
 
+// A derived card, not a stored balance: it totals what has been spent on the
+// "ลงทุน" category, so it needs no account of its own and never joins ยอดรวม
+const INVEST_CARD = { name: 'KTX - ลงทุน', short: 'ลงทุน', purpose: 'เงินลงทุนสะสม จากรายการหมวด "ลงทุน"', icon: 'KTX', css: 'invest' };
+const INVEST_COLOR = '#22d3ee';
+
+// month omitted = every month
+function investedTx(month) {
+  return state.transactions.filter(t => t.type === 'expense' && t.category === 'ลงทุน'
+    && (!month || t.date.substring(0, 7) === month));
+}
+function investedTotal(month) { return investedTx(month).reduce((a, t) => a + t.amount, 0); }
+
 // One card strip sits above the tab bar for both pages, so the tab bar never
 // moves: the overview fills it with balances, the transactions tab with that
 // month's movement. Accounts with no activity stay listed at ฿0.
@@ -912,26 +925,47 @@ function renderAccountCards() {
 
   if (activeTab === 'overview') {
     const total = Object.values(state.balances).reduce((a, b) => a + b, 0);
-    el.innerHTML = ids.map(id => {
+    let html = ids.map(id => {
       const bal = state.balances[id];
       const pct = total > 0 ? Math.round(bal / total * 100) : 0;
-      return accountCardHtml(id, { value: bal, sub: `${pct}% ของยอดรวม`, pct });
+      return accountCardHtml(ACCOUNTS[id], COLORS[id], { value: bal, sub: `${pct}% ของยอดรวม`, pct });
     }).join('');
+    // Investment sits after the real accounts: everything invested, all months
+    const invested = investedTotal();
+    const n = investedTx().length;
+    const wealth = total + invested;
+    html += accountCardHtml(INVEST_CARD, INVEST_COLOR, {
+      value: invested,
+      dimZero: true,
+      sub: n ? `${n} รายการ · ${wealth > 0 ? Math.round(invested / wealth * 100) : 0}% ของเงินทั้งหมด` : 'ยังไม่มีรายการหมวดลงทุน',
+      pct: wealth > 0 ? Math.round(invested / wealth * 100) : 0
+    });
+    el.innerHTML = html;
     return;
   }
 
   const month = currentMonthStr();
   const flows = Object.fromEntries(ids.map(id => [id, monthAccountFlow(id, month)]));
-  const widest = Math.max(1, ...ids.map(id => Math.abs(flows[id].net)));
-  el.innerHTML = ids.map(id => {
+  const investedMonth = investedTotal(month);
+  const widest = Math.max(1, investedMonth, ...ids.map(id => Math.abs(flows[id].net)));
+  let html = ids.map(id => {
     const { into, out, net } = flows[id];
-    return accountCardHtml(id, {
+    return accountCardHtml(ACCOUNTS[id], COLORS[id], {
       value: net,
       signed: true,
       sub: into || out ? `${fmtMonth(month)} · เข้า ฿ ${fmt(into)} · ออก ฿ ${fmt(out)}` : `${fmtMonth(month)} · ไม่มีรายการ`,
       pct: Math.round(Math.abs(net) / widest * 100)
     });
   }).join('');
+  // Same card in the same slot, but scoped to the month like everything else here
+  const n = investedTx(month).length;
+  html += accountCardHtml(INVEST_CARD, INVEST_COLOR, {
+    value: investedMonth,
+    dimZero: true,
+    sub: n ? `${fmtMonth(month)} · ลงทุน ${n} รายการ` : `${fmtMonth(month)} · ไม่มีรายการ`,
+    pct: Math.round(investedMonth / widest * 100)
+  });
+  el.innerHTML = html;
 }
 
 // ============ Monthly Plan (recurring items) ============

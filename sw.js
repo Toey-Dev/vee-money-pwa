@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vee-money-v26';
+const CACHE_NAME = 'vee-money-v27';
 const ASSETS = [
   './',
   './index.html',
