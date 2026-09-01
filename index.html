@@ -285,11 +285,11 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
   .acc-icon{width:40px;height:40px;border-radius:11px;font-size:12px}
   .acc-label{font-size:13px;margin-bottom:1px;font-weight:600}
   .acc-purpose{font-size:11px}
-  .acc-value{margin-top:0;font-size:18px;justify-content:flex-end;text-align:right}
+  /* reserve the amount column so the name wraps the same way whether the card
+     shows a balance or a month's movement — keeps the tab bar from shifting */
+  .acc-value{margin-top:0;font-size:18px;justify-content:flex-end;text-align:right;min-width:96px}
   .acc-value .currency{font-size:13px}
   .acc-pct{display:none}
-  /* the month cards keep their in/out line — it is what tells ฿0 apart from "no activity" */
-  #txSummary .acc-pct{display:block;margin-top:10px}
   .progress-bar{margin-top:12px}
 
   .grid-2{grid-template-columns:1fr;gap:14px}
@@ -382,11 +382,6 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 </div>
 
 <div id="tab-transactions" style="display:none">
-  <div style="display:flex;align-items:center;gap:8px;margin:0 4px 12px">
-    <span style="font-size:15px;font-weight:700;letter-spacing:-0.2px">ยอดเดือนนี้</span>
-    <span class="badge badge-blue" id="txSummaryMonth"></span>
-  </div>
-  <div class="grid-4" id="txSummary"></div>
   <div class="card">
     <div class="section-title">สแกนสลิป <span class="badge badge-blue">OCR</span></div>
     <div class="slip-zone" id="slipZone">
@@ -841,10 +836,10 @@ function accCell(acc) {
   return `<span class="acc-tag ${acc.css}">${acc.icon}</span>${esc(acc.short)}`;
 }
 function switchTab(tab, ev) {
+  activeTab = tab;
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
   document.getElementById('tab-' + tab).style.display = '';
-  // Account balances belong to the overview; other tabs stay focused on their own job
-  document.getElementById('accountCards').style.display = tab === 'overview' ? '' : 'none';
+  renderAccountCards();
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   (ev?.currentTarget || ev?.target?.closest('.tab'))?.classList.add('active');
   if (tab === 'settings') renderSettings();
@@ -853,8 +848,7 @@ function switchTab(tab, ev) {
 
 function render() {
   renderSubtitle();
-  renderAccounts();
-  renderTxSummary();
+  renderAccountCards();
   renderPlan();
   renderBars();
   renderYearGoal();
@@ -897,14 +891,28 @@ function accountCardHtml(id, { value, sub, pct, signed }) {
 
 function visibleAccountIds() { return Object.keys(ACCOUNTS).filter(id => !isHidden(id)); }
 
-// Transactions tab: same cards, but each one shows what moved during the month.
-// Accounts with no activity stay listed at ฿0 so the layout never shifts.
-function renderTxSummary() {
-  const el = document.getElementById('txSummary');
-  if (!el) return;
-  const month = currentMonthStr();
-  document.getElementById('txSummaryMonth').textContent = fmtMonth(month);
+// One card strip sits above the tab bar for both pages, so the tab bar never
+// moves: the overview fills it with balances, the transactions tab with that
+// month's movement. Accounts with no activity stay listed at ฿0.
+let activeTab = 'overview';
+
+function renderAccountCards() {
+  const el = document.getElementById('accountCards');
+  if (activeTab !== 'overview' && activeTab !== 'transactions') { el.style.display = 'none'; return; }
+  el.style.display = '';
   const ids = visibleAccountIds();
+
+  if (activeTab === 'overview') {
+    const total = Object.values(state.balances).reduce((a, b) => a + b, 0);
+    el.innerHTML = ids.map(id => {
+      const bal = state.balances[id];
+      const pct = total > 0 ? Math.round(bal / total * 100) : 0;
+      return accountCardHtml(id, { value: bal, sub: `${pct}% ของยอดรวม`, pct });
+    }).join('');
+    return;
+  }
+
+  const month = currentMonthStr();
   const flows = Object.fromEntries(ids.map(id => [id, monthAccountFlow(id, month)]));
   const widest = Math.max(1, ...ids.map(id => Math.abs(flows[id].net)));
   el.innerHTML = ids.map(id => {
@@ -912,18 +920,9 @@ function renderTxSummary() {
     return accountCardHtml(id, {
       value: net,
       signed: true,
-      sub: into || out ? `เข้า ฿ ${fmt(into)} · ออก ฿ ${fmt(out)}` : 'ไม่มีรายการเดือนนี้',
+      sub: into || out ? `${fmtMonth(month)} · เข้า ฿ ${fmt(into)} · ออก ฿ ${fmt(out)}` : `${fmtMonth(month)} · ไม่มีรายการ`,
       pct: Math.round(Math.abs(net) / widest * 100)
     });
-  }).join('');
-}
-
-function renderAccounts() {
-  const total = Object.values(state.balances).reduce((a, b) => a + b, 0);
-  document.getElementById('accountCards').innerHTML = visibleAccountIds().map(id => {
-    const bal = state.balances[id];
-    const pct = total > 0 ? Math.round(bal / total * 100) : 0;
-    return accountCardHtml(id, { value: bal, sub: `${pct}% ของยอดรวม`, pct });
   }).join('');
 }
 
@@ -1140,7 +1139,7 @@ function renderRecent() {
     const typeLabel = isIncome ? 'รายรับ' : isTransfer ? 'โอน' : 'รายจ่าย';
     html += `<tr>
       <td style="white-space:nowrap">${fmtDate(tx.date)}</td>
-      <td>${esc(tx.desc || tx.category)}</td>
+      <td>${esc(tx.desc || (isTransfer ? `โอนไป ${accOf(txDest(tx)).short}` : tx.category))}</td>
       <td style="white-space:nowrap">${accCell(acc)}</td>
       <td><span class="badge ${badge}">${typeLabel}</span></td>
       <td style="text-align:right;font-weight:600;white-space:nowrap" class="${colorClass} num">${sign}฿ ${fmt(tx.amount)}</td>
@@ -1500,9 +1499,9 @@ function renderCardKTC() {
   const pct = budget > 0 ? Math.min(100, Math.round(usedMonth / budget * 100)) : 0;
   const over = usedMonth > budget;
   let html = `
-    <div class="summary-row"><span class="label">รูดสะสมเดือนนี้ (งบ ฿ ${fmt(budget)})</span><span class="value" style="color:${over ? 'var(--red)' : 'var(--teal)'}">฿ ${fmt(swipedMonth)}${over ? ' · เกินงบ!' : ''}</span></div>
+    <div class="summary-row"><span class="label">รูดสะสมเดือนนี้ (งบ ฿ ${fmt(budget)})</span><span class="value" style="color:${swipedMonth > budget ? 'var(--red)' : 'var(--teal)'}">฿ ${fmt(swipedMonth)}${swipedMonth > budget ? ' · เกินงบ!' : ''}</span></div>
     <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${over ? 'var(--red)' : 'var(--teal)'};color:${over ? 'var(--red)' : 'var(--teal)'}"></div></div>
-    <div class="summary-row" style="margin-top:8px"><span class="label">จ่ายบิลแล้วเดือนนี้</span><span class="value" style="color:${paidMonth > budget ? 'var(--red)' : 'var(--text-2)'}">฿ ${fmt(paidMonth)}</span></div>
+    <div class="summary-row" style="margin-top:8px"><span class="label">จ่ายบิลแล้วเดือนนี้</span><span class="value" style="color:${paidMonth > budget ? 'var(--red)' : 'var(--text-2)'}">฿ ${fmt(paidMonth)}${paidMonth > budget ? ' · เกินงบ!' : ''}</span></div>
     <div class="summary-row"><span class="label">ยอดค้างชำระ${pending.length ? ` (${pending.length} รายการ)` : ''}</span><span class="value yellow">฿ ${fmt(pendingSum)}</span></div>`;
   for (const s of [...pending].reverse().slice(0, 3)) {
     html += `<div class="summary-row" style="font-size:12px">
