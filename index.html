@@ -734,6 +734,14 @@ function migrateState(s) {
     for (const p of s.plan) if (p.type === 'transfer' && p.dest === 'ktb1') p.dest = 'tcr1';
     s.schemaRev = 2;
   }
+
+  // Rev 3 — the card account only buffers money owed to KTC, so parking cash
+  // there is not saving; leaving it flagged made every card top-up look like
+  // savings growth now that its funding account no longer counts
+  if (!(s.schemaRev >= 3)) {
+    if (s.accountsMeta.ktb2) s.accountsMeta.ktb2.saving = false;
+    s.schemaRev = 3;
+  }
   return s;
 }
 migrateState(state);
