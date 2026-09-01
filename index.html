@@ -99,6 +99,7 @@ h1{font-size:26px;font-weight:800;margin-bottom:6px;color:var(--text);letter-spa
 }
 .acc-icon.kbank{background:linear-gradient(135deg,#00c060 0%,#008f45 100%)}
 .acc-icon.ktb{background:linear-gradient(135deg,#1eb8f5 0%,#0085c2 100%)}
+.acc-icon.tcredit{background:linear-gradient(135deg,#fb7185 0%,#e11d48 100%)}
 .acc-info{flex:1;min-width:0}
 .acc-label{font-size:13px;color:var(--text-2);font-weight:500;margin-bottom:2px}
 .acc-purpose{font-size:11px;color:var(--text-3);font-weight:500}
@@ -131,6 +132,7 @@ h1{font-size:26px;font-weight:800;margin-bottom:6px;color:var(--text);letter-spa
 .acc-tag{display:inline-block;font-size:9px;font-weight:700;color:#fff;padding:2px 5px;border-radius:6px;margin-right:6px;vertical-align:1px;letter-spacing:0.3px}
 .acc-tag.kbank{background:linear-gradient(135deg,#00c060,#008f45)}
 .acc-tag.ktb{background:linear-gradient(135deg,#1eb8f5,#0085c2)}
+.acc-tag.tcredit{background:linear-gradient(135deg,#fb7185,#e11d48)}
 
 /* Table */
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -511,7 +513,7 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
     </div>
     <div class="card">
       <div class="section-title">แนะนำเป้าหมาย</div>
-      <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('เงินสำรองฉุกเฉิน','6 เดือนค่าใช้จ่าย',90000,'ktb1')">
+      <div class="goal-item" style="cursor:pointer" onclick="addSuggestedGoal('เงินสำรองฉุกเฉิน','6 เดือนค่าใช้จ่าย',90000,'tcr1')">
         <div class="goal-icon" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.25)">🛡️</div>
         <div class="goal-info"><div class="goal-name">เงินสำรองฉุกเฉิน</div><div class="goal-detail">6 เดือน × ค่าใช้จ่ายเดือนละ 15,000 = 90,000 ฿</div></div>
       </div>
@@ -620,6 +622,8 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
     <p style="font-size:12px;color:var(--text-2);line-height:1.5">สร้างให้อัตโนมัติ 2 รายการ: โอน ออม → บัตร KTC และรายจ่าย "ชำระบัตร KTC" พร้อมเคลียร์ยอดรูดค้างชำระที่บันทึกไว้</p>
     <label>ยอดบิลที่ต้องจ่าย (฿)</label>
     <input type="number" id="cardPayAmount" placeholder="0.00" inputmode="decimal">
+    <label>ตัดเงินจากบัญชี</label>
+    <select id="cardPaySource"></select>
     <label>วันที่จ่าย</label>
     <input type="date" id="cardPayDate">
     <p id="cardPayPendingInfo" style="font-size:11px;color:var(--text-3);margin-top:10px"></p>
@@ -681,29 +685,35 @@ input:focus,select:focus{outline:none;border-color:var(--accent);background:var(
 </div>
 
 <script>
+// `prefix` is the bank label shown before the account's short name.
+// Account ids are permanent — rename labels freely, but never reuse or remove an
+// id, or existing transactions lose the account they point at.
 const ACCOUNTS = {
-  kbank1: { name: 'กสิกร - เงินเดือน+ใช้จ่าย', short: 'เงินเดือน+ใช้จ่าย', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'รับเงินเดือน + ใช้จ่ายประจำวัน' },
-  kbank2: { name: 'กสิกร - ซื้อของ/เที่ยว', short: 'ซื้อของ/เที่ยว', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'เงินเก็บซื้อของ/ท่องเที่ยว ตามสะดวกแต่ละเดือน' },
-  ktb1:   { name: 'กรุงไทย - ออม', short: 'ออม', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'ออมระยะยาว + รับบำนาญ' },
-  ktb2:   { name: 'กรุงไทย - บัตร KTC', short: 'บัตร KTC', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'พักเงินสำหรับตัดบัตร KTC' }
+  kbank1: { name: '', short: 'เงินเดือน+ใช้จ่าย', prefix: 'กสิกร', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'รับเงินเดือน + ใช้จ่ายประจำวัน' },
+  kbank2: { name: '', short: 'ซื้อของ/เที่ยว', prefix: 'กสิกร', bank: 'กสิกรไทย', icon: 'KB', css: 'kbank', purpose: 'เงินเก็บซื้อของ/ท่องเที่ยว ตามสะดวกแต่ละเดือน' },
+  ktb1:   { name: '', short: 'รับบำนาญ', prefix: 'กรุงไทย', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'รับเงินบำนาญ' },
+  ktb2:   { name: '', short: 'บัตร KTC + พักเงินลงทุน', prefix: 'กรุงไทย', bank: 'กรุงไทย', icon: 'KT', css: 'ktb', purpose: 'พักเงินสำหรับตัดบัตร KTC และเงินลงทุน' },
+  tcr1:   { name: '', short: 'เงินออม', prefix: 'ไทยเครดิต', bank: 'ไทยเครดิต', icon: 'TC', css: 'tcredit', purpose: 'บัญชีเงินออมหลัก' }
 };
 
-const COLORS = { kbank1: '#34d399', kbank2: '#fbbf24', ktb1: '#60a5fa', ktb2: '#a78bfa' };
+const COLORS = { kbank1: '#34d399', kbank2: '#fbbf24', ktb1: '#60a5fa', ktb2: '#a78bfa', tcr1: '#fb7185' };
+const ZERO_BALANCES = Object.fromEntries(Object.keys(ACCOUNTS).map(id => [id, 0]));
 
 let state = null;
 try { state = JSON.parse(localStorage.getItem('vee_money') || 'null'); } catch {}
-state = state || { balances: { kbank1: 0, kbank2: 0, ktb1: 0, ktb2: 0 }, transactions: [], goals: [] };
+state = state || { balances: { ...ZERO_BALANCES }, transactions: [], goals: [] };
 
 // ===== Migrations: fill new/missing fields — runs at load AND after every import =====
 function migrateState(s) {
   if (!s || typeof s !== 'object' || Array.isArray(s)) throw new Error('invalid state shape');
-  s.balances = Object.assign({ kbank1: 0, kbank2: 0, ktb1: 0, ktb2: 0 }, s.balances || {});
+  // Accounts added after a backup was taken start at 0 instead of undefined
+  s.balances = Object.assign({ ...ZERO_BALANCES }, s.balances || {});
   if (!Array.isArray(s.transactions)) s.transactions = [];
   if (!Array.isArray(s.goals)) s.goals = [];
   if (!Array.isArray(s.plan)) s.plan = [
     { id: 1, day: 31, type: 'income', account: 'kbank1', amount: 40000, category: 'เงินเดือน', desc: 'เงินเดือน' },
     { id: 2, day: 25, type: 'income', account: 'ktb1', amount: 11000, category: 'บำนาญ', desc: 'บำนาญ' },
-    { id: 3, day: 31, type: 'transfer', account: 'kbank1', dest: 'ktb1', amount: 29000, category: '', desc: 'โอนเก็บออม' }
+    { id: 3, day: 31, type: 'transfer', account: 'kbank1', dest: 'tcr1', amount: 29000, category: '', desc: 'โอนเก็บออม' }
   ];
   if (!s.yearGoal || typeof s.yearGoal !== 'object') s.yearGoal = {};
   if (typeof s.yearGoal.min !== 'number') s.yearGoal.min = 300000;
@@ -718,7 +728,7 @@ migrateState(state);
 
 // ===== Editable account metadata (name/purpose/saving flag/hidden) =====
 const ACCOUNT_DEFAULTS = JSON.parse(JSON.stringify(ACCOUNTS));
-const DEFAULT_SAVING = { ktb1: true, ktb2: true };
+const DEFAULT_SAVING = { tcr1: true, ktb2: true };
 function accMeta(id) { return state.accountsMeta[id] || {}; }
 function isSaving(id) { const m = accMeta(id); return m.saving === undefined ? !!DEFAULT_SAVING[id] : !!m.saving; }
 function isHidden(id) { return !!accMeta(id).hidden; }
@@ -726,9 +736,15 @@ function applyAccountsMeta() {
   for (const [id, acc] of Object.entries(ACCOUNTS)) {
     const d = ACCOUNT_DEFAULTS[id], m = accMeta(id);
     acc.short = m.short || d.short;
-    acc.name = (acc.css === 'kbank' ? 'กสิกร' : 'กรุงไทย') + ' - ' + acc.short;
+    acc.name = d.prefix + ' - ' + acc.short;
     acc.purpose = m.purpose || d.purpose;
   }
+}
+
+// Transactions can reference an account id this build no longer defines (an old
+// backup); show a placeholder instead of throwing so the data stays visible
+function accOf(id) {
+  return ACCOUNTS[id] || { short: id || '?', name: id || 'ไม่ทราบบัญชี', icon: '??', css: 'ktb', purpose: '' };
 }
 applyAccountsMeta();
 
@@ -737,7 +753,7 @@ function accountOptions() {
   return Object.entries(ACCOUNTS).map(([id, a]) => `<option value="${id}">${esc(a.name)}</option>`).join('');
 }
 function refreshAccountSelects() {
-  for (const sid of ['txAccount', 'planAccount', 'planDest', 'goalAccount']) {
+  for (const sid of ['txAccount', 'planAccount', 'planDest', 'goalAccount', 'cardPaySource']) {
     const el = document.getElementById(sid);
     const cur = el.value;
     el.innerHTML = accountOptions();
@@ -770,7 +786,7 @@ function recordTx(tx) { state.transactions.push(tx); applyTxBalances(tx, 1); }
 function confirmSufficientBalance(accountId, amount, label) {
   const bal = state.balances[accountId];
   if (amount <= bal) return true;
-  return confirm(`ยอดคงเหลือ "${ACCOUNTS[accountId].name}" มี ฿ ${fmt(bal)} ไม่พอสำหรับ${label} (฿ ${fmt(amount)})\nบันทึกแล้วยอดจะติดลบ — ยืนยันหรือไม่?`);
+  return confirm(`ยอดคงเหลือ "${accOf(accountId).name}" มี ฿ ${fmt(bal)} ไม่พอสำหรับ${label} (฿ ${fmt(amount)})\nบันทึกแล้วยอดจะติดลบ — ยืนยันหรือไม่?`);
 }
 
 // Apply (dir = +1) or revert (dir = -1) a transaction's effect on balances —
@@ -1009,7 +1025,7 @@ function renderRecent() {
   const recent = [...state.transactions].reverse().slice(0, 5);
   let html = '';
   for (const tx of recent) {
-    const acc = ACCOUNTS[tx.account];
+    const acc = accOf(tx.account);
     const isIncome = tx.type === 'income';
     const isTransfer = tx.type === 'transfer';
     const colorClass = isIncome ? 'green' : isTransfer ? 'blue' : 'red';
@@ -1035,7 +1051,7 @@ function renderTransactions() {
   let html = '';
   for (let i = 0; i < txs.length; i++) {
     const tx = txs[i];
-    const acc = ACCOUNTS[tx.account];
+    const acc = accOf(tx.account);
     const isIncome = tx.type === 'income';
     const isTransfer = tx.type === 'transfer';
     const colorClass = isIncome ? 'green' : isTransfer ? 'blue' : 'red';
@@ -1045,7 +1061,7 @@ function renderTransactions() {
     const realIdx = state.transactions.indexOf(tx);
     const dest = txDest(tx);
     const catLabel = isTransfer
-      ? (ACCOUNTS[dest] ? `→ ${accCell(ACCOUNTS[dest])}` : '-')
+      ? (dest ? `→ ${accCell(accOf(dest))}` : '-')
       : esc(tx.category);
     html += `<tr>
       <td style="white-space:nowrap">${fmtDate(tx.date)}</td>
@@ -1230,7 +1246,7 @@ function saveAccountsMeta() {
 
 // ============ Monthly Reports ============
 const THAI_MONTHS_ABBR = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-const CAT_COLORS = { 'อาหาร': '#fbbf24', 'เดินทาง': '#60a5fa', 'ของใช้': '#2dd4bf', 'บันเทิง': '#a78bfa', 'ค่าเช่า/ผ่อน': '#f87171', 'สาธารณูปโภค': '#34d399', 'บัตรเครดิต': '#f472b6', 'ปรับยอด': '#64748b', 'อื่นๆ': '#94a3b8' };
+const CAT_COLORS = { 'อาหาร': '#fbbf24', 'เดินทาง': '#60a5fa', 'ของใช้': '#2dd4bf', 'บันเทิง': '#a78bfa', 'ค่าเช่า/ผ่อน': '#f87171', 'สาธารณูปโภค': '#34d399', 'บัตรเครดิต': '#f472b6', 'บัตรเครดิตพ่อแม่': '#fb923c', 'ลงทุน': '#22d3ee', 'ปรับยอด': '#64748b', 'อื่นๆ': '#94a3b8' };
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
@@ -1416,10 +1432,14 @@ function deleteSwipe(id) {
   save(); render();
 }
 
+const CARD_PARK_ACCOUNT = 'ktb2'; // where card money is parked before it leaves
+
 function openCardPayModal() {
   const pendingSum = pendingCardSum();
   document.getElementById('cardPayAmount').value = pendingSum || '';
   document.getElementById('cardPayDate').value = localISODate();
+  const src = document.getElementById('cardPaySource');
+  if (!src.value) src.value = CARD_PARK_ACCOUNT;
   document.getElementById('cardPayPendingInfo').textContent = pendingSum > 0
     ? `ยอดรูดค้างชำระที่บันทึกไว้: ฿ ${fmt(pendingSum)} — จะถูกเคลียร์เมื่อจ่ายบิล`
     : 'ไม่มียอดรูดค้างชำระที่บันทึกไว้ — กรอกยอดจากบิลจริงได้เลย';
@@ -1431,9 +1451,13 @@ function payCardBill() {
   const amount = parseFloat(document.getElementById('cardPayAmount').value) || 0;
   if (amount <= 0) { alert('กรุณากรอกยอดบิล'); return; }
   const date = document.getElementById('cardPayDate').value || localISODate();
-  if (!confirmSufficientBalance('ktb1', amount, 'บิลบัตร KTC')) return;
-  recordTx({ date, account: 'ktb1', type: 'transfer', amount, desc: 'ย้ายเงินจ่ายบิลบัตร KTC', category: 'ktb2', dest: 'ktb2', id: Date.now() });
-  recordTx({ date, account: 'ktb2', type: 'expense', amount, desc: 'ชำระบัตร KTC', category: 'บัตรเครดิต', id: Date.now() + 1 });
+  const source = document.getElementById('cardPaySource').value || CARD_PARK_ACCOUNT;
+  if (!confirmSufficientBalance(source, amount, 'บิลบัตร KTC')) return;
+  // Money already parked in the card account needs no transfer leg
+  if (source !== CARD_PARK_ACCOUNT) {
+    recordTx({ date, account: source, type: 'transfer', amount, desc: 'ย้ายเงินจ่ายบิลบัตร KTC', category: CARD_PARK_ACCOUNT, dest: CARD_PARK_ACCOUNT, id: Date.now() });
+  }
+  recordTx({ date, account: CARD_PARK_ACCOUNT, type: 'expense', amount, desc: 'ชำระบัตร KTC', category: 'บัตรเครดิต', id: Date.now() + 1 });
   // Settle pending swipes oldest-first, only up to the amount actually paid —
   // a partial payment leaves the uncovered swipes still tracked as owed
   let remaining = amount + 0.005;
@@ -1445,7 +1469,7 @@ function payCardBill() {
     remaining -= s.amount;
   }
   save(); render(); closeCardPayModal();
-  alert(`จ่ายบิลบัตร KTC ฿ ${fmt(amount)} เรียบร้อย — สร้างรายการโอน + รายจ่ายให้แล้ว`);
+  alert(`จ่ายบิลบัตร KTC ฿ ${fmt(amount)} เรียบร้อย (ตัดจาก ${accOf(source).short})`);
 }
 
 // ============ Reconcile balances with the real bank app ============
@@ -1663,7 +1687,7 @@ function importData(event) {
 // expenses to default to "เงินเดือน" and skew the category report
 const CATS_BY_TYPE = {
   income: [['เงินเดือน', 'เงินเดือน'], ['บำนาญ', 'บำนาญ'], ['โอนรับ', 'โอนรับจากคนอื่น'], ['อื่นๆ', 'อื่นๆ']],
-  expense: [['อาหาร', 'อาหาร'], ['เดินทาง', 'เดินทาง'], ['ของใช้', 'ของใช้'], ['บันเทิง', 'บันเทิง'], ['ค่าเช่า/ผ่อน', 'ค่าเช่า/ผ่อน'], ['สาธารณูปโภค', 'สาธารณูปโภค'], ['บัตรเครดิต', 'บัตรเครดิต'], ['อื่นๆ', 'อื่นๆ']]
+  expense: [['อาหาร', 'อาหาร'], ['เดินทาง', 'เดินทาง'], ['ของใช้', 'ของใช้'], ['บันเทิง', 'บันเทิง'], ['ค่าเช่า/ผ่อน', 'ค่าเช่า/ผ่อน'], ['สาธารณูปโภค', 'สาธารณูปโภค'], ['บัตรเครดิต', 'บัตรเครดิต (KTC)'], ['บัตรเครดิตพ่อแม่', 'บัตรเครดิตพ่อแม่'], ['ลงทุน', 'ลงทุน'], ['อื่นๆ', 'อื่นๆ']]
 };
 const DEFAULT_ACCOUNT = { income: 'kbank1', expense: 'kbank1' };
 
