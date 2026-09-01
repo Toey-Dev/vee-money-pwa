@@ -789,7 +789,12 @@ function refreshAccountSelects() {
 }
 
 function save() { localStorage.setItem('vee_money', JSON.stringify(state)); }
-function fmt(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+// Amounts are shown in whole baht, so anything under half a baht — including a
+// negative rounding residue — prints as 0 rather than a confusing "-0"
+function fmt(n) {
+  if (!(Math.abs(n) >= 0.5)) n = 0;
+  return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
 
 // Local-time date helpers — toISOString() is UTC and shifts the date/month
 // back one day between 00:00–07:00 Thai time, so never use it for calendar logic
@@ -808,7 +813,9 @@ function recordTx(tx) { state.transactions.push(tx); applyTxBalances(tx, 1); }
 // Shared low-balance confirmation — one wording, one threshold, every flow
 function confirmSufficientBalance(accountId, amount, label) {
   const bal = state.balances[accountId];
-  if (amount <= bal) return true;
+  // Balances are displayed rounded to the baht, so a shortfall smaller than what
+  // the screen can show must not raise a warning the user cannot make sense of
+  if (amount <= bal + 0.5) return true;
   return confirm(`ยอดคงเหลือ "${accOf(accountId).name}" มี ฿ ${fmt(bal)} ไม่พอสำหรับ${label} (฿ ${fmt(amount)})\nบันทึกแล้วยอดจะติดลบ — ยืนยันหรือไม่?`);
 }
 
@@ -872,9 +879,10 @@ function renderSubtitle() {
 // (that month's movement), so both pages read the same way
 function accountCardHtml(id, { value, sub, pct, signed }) {
   const acc = ACCOUNTS[id], color = COLORS[id];
-  const sign = signed && value > 0 ? '+' : signed && value < 0 ? '−' : '';
-  const amount = signed ? fmt(Math.abs(value)) : fmt(value);
-  const dim = signed && value === 0;
+  const shown = Math.abs(value) < 0.5 ? 0 : value;   // sub-baht residue counts as zero
+  const sign = signed && shown > 0 ? '+' : signed && shown < 0 ? '−' : '';
+  const amount = signed ? fmt(Math.abs(shown)) : fmt(shown);
+  const dim = signed && shown === 0;
   return `<div class="acc-card" style="--acc-color:${color}">
     <div class="acc-row">
       <div class="acc-icon ${acc.css}">${acc.icon}</div>
